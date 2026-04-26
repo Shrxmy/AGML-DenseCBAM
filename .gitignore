@@ -182,7 +182,15 @@ cython_debug/
 
 # Ignore dataset and h5s
 *.h5
+keras-h5
 /data/*
+data
+/data_5_fold/*
+data_5_fold
 
 # Paper
 paper/*
+
+# Old Scripts and Notebooks
+/legacy/*
+scripts/old/*
