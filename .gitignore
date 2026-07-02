@@ -180,19 +180,30 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
-# Ignore dataset and h5s
+# Project datasets and generated folds
+/data/
+/data_5_fold/
+
+# Trained models and checkpoints
 *.h5
-keras-h5
-/data/*
-data
-/data_5_fold/*
-data_5_fold
+*.keras
+*.ckpt
+keras-h5/
+checkpoints/
+models/
 
-# Paper
-paper/*
+# Training outputs and generated analysis artifacts
+/chapter4_results/
+/oldstyle_results/
+/output/
 
-# Old Scripts and Notebooks
-/legacy/*
-scripts/old/*
-chapter4_results/*
-output/*
+# Paper/docx working copies are large binary artifacts
+/paper/
+/PAPER/
+
+# Legacy/prototype notebooks and scratch scripts
+/legacy/generated/
+/scripts/old/
+
+# Generated previews
+/chapter4_results/sample_artifacts_preview/
