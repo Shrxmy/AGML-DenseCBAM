@@ -1,2 +1,0 @@
-split_mode,model_type,scenario,accuracy,precision,recall,specificity,f1,tn,fp,fn,tp,images_per_second,epochs_ran,fold
-fixed,proposed,artifact_mix,0.9021897810218978,0.9149484536082474,0.9125964010282777,0.8885135135135135,0.9137709137709138,263,33,34,355,43.42079601050289,28,fold_2
