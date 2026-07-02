@@ -53,6 +53,7 @@ class RunConfig:
     tmd_loss_weight: float
     artifact_loss_weight: float
     fold_limit: int | None
+    single_fold: str | None
 
 
 def seed_everything(seed: int) -> None:
@@ -152,7 +153,9 @@ class TMJSequence(KerasSequence):
         scenario: str,
         training: bool,
         seed: int,
+        **kwargs,
     ) -> None:
+        super().__init__(**kwargs)
         self.df = dataframe.reset_index(drop=True).copy()
         self.image_size = image_size
         self.batch_size = batch_size
@@ -431,6 +434,12 @@ def run_case(config: RunConfig) -> pd.DataFrame:
         [p for p in config.folds_root.iterdir() if p.is_dir() and p.name.startswith("fold_")],
         key=lambda p: int(p.name.split("_")[1]),
     )
+    if config.single_fold is not None:
+        fold_dirs = [p for p in fold_dirs if p.name == config.single_fold]
+        if not fold_dirs:
+            raise FileNotFoundError(
+                f"Requested --single_fold {config.single_fold!r}, but it was not found under {config.folds_root}"
+            )
     if config.fold_limit is not None:
         fold_dirs = fold_dirs[: config.fold_limit]
     if not fold_dirs:
@@ -488,6 +497,7 @@ def parse_args() -> RunConfig:
     parser.add_argument("--tmd_loss_weight", type=float, default=1.0)
     parser.add_argument("--artifact_loss_weight", type=float, default=0.35)
     parser.add_argument("--fold_limit", type=int, default=None, help="Use 1 for smoke test; omit for all folds.")
+    parser.add_argument("--single_fold", type=str, default=None, help="Run only one named fold, e.g. fold_2. Used by isolated runner.")
     args = parser.parse_args()
 
     output_dir = args.output_dir or Path("chapter4_results") / f"{args.model_type}_{args.scenario}"
@@ -506,6 +516,7 @@ def parse_args() -> RunConfig:
         tmd_loss_weight=args.tmd_loss_weight,
         artifact_loss_weight=args.artifact_loss_weight,
         fold_limit=args.fold_limit,
+        single_fold=args.single_fold,
     )
 
 
