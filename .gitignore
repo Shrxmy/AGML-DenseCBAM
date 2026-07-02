@@ -194,3 +194,5 @@ paper/*
 # Old Scripts and Notebooks
 /legacy/*
 scripts/old/*
+chapter4_results/*
+output/*

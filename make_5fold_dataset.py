@@ -4,12 +4,12 @@ from __future__ import annotations
 import argparse
 import csv
 import hashlib
+import random
 import shutil
+from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Tuple
-
-from sklearn.model_selection import StratifiedKFold, train_test_split
+from typing import DefaultDict, Dict, List, Tuple
 
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff"}
 CLASS_NAMES = ["normal", "subluxation"]
@@ -74,6 +74,70 @@ def ensure_fold_dirs(fold_root: Path) -> None:
 def copy_item(item: Item, dst_path: Path) -> None:
     shutil.copy2(item.src_path, dst_path)
 
+def stratified_kfold_indices(
+    items: List[Item],
+    n_splits: int,
+    random_state: int,
+) -> List[Tuple[List[int], List[int]]]:
+    """Return deterministic stratified train/test index pairs without sklearn."""
+    if n_splits < 2:
+        raise ValueError("n_splits must be at least 2")
+
+    by_label: DefaultDict[int, List[int]] = defaultdict(list)
+    for idx, item in enumerate(items):
+        by_label[item.label].append(idx)
+
+    folds: List[List[int]] = [[] for _ in range(n_splits)]
+    rng = random.Random(random_state)
+    for label, indices in sorted(by_label.items()):
+        if len(indices) < n_splits:
+            raise ValueError(
+                f"Class label {label} has only {len(indices)} samples; "
+                f"cannot create {n_splits} stratified folds."
+            )
+        shuffled = indices[:]
+        rng.shuffle(shuffled)
+        for pos, idx in enumerate(shuffled):
+            folds[pos % n_splits].append(idx)
+
+    all_indices = set(range(len(items)))
+    pairs: List[Tuple[List[int], List[int]]] = []
+    for test_indices in folds:
+        test_set = set(test_indices)
+        train_val_indices = sorted(all_indices - test_set)
+        pairs.append((train_val_indices, sorted(test_indices)))
+    return pairs
+
+
+def stratified_train_val_split(
+    items: List[Item],
+    val_size: float,
+    random_state: int,
+) -> Tuple[List[int], List[int]]:
+    """Split relative indices into train/validation while preserving class ratios."""
+    if not 0 < val_size < 1:
+        raise ValueError("val_size must be between 0 and 1")
+
+    by_label: DefaultDict[int, List[int]] = defaultdict(list)
+    for idx, item in enumerate(items):
+        by_label[item.label].append(idx)
+
+    rng = random.Random(random_state)
+    train_indices: List[int] = []
+    val_indices: List[int] = []
+    for label, indices in sorted(by_label.items()):
+        shuffled = indices[:]
+        rng.shuffle(shuffled)
+        val_count = max(1, round(len(shuffled) * val_size))
+        if val_count >= len(shuffled):
+            raise ValueError(
+                f"Validation split for label {label} would consume the whole class."
+            )
+        val_indices.extend(shuffled[:val_count])
+        train_indices.extend(shuffled[val_count:])
+
+    return sorted(train_indices), sorted(val_indices)
+
 
 def create_folds(
     items: List[Item],
@@ -82,20 +146,18 @@ def create_folds(
     val_size: float = 0.15,
     random_state: int = 42,
 ) -> None:
-    labels = [item.label for item in items]
-    skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)
-
-    for fold_idx, (train_val_idx, test_idx) in enumerate(skf.split(range(len(items)), labels), start=1):
+    for fold_idx, (train_val_idx, test_idx) in enumerate(
+        stratified_kfold_indices(items, n_splits=n_splits, random_state=random_state),
+        start=1,
+    ):
         fold_root = output_root / f"fold_{fold_idx}"
         ensure_fold_dirs(fold_root)
 
         train_val_items = [items[i] for i in train_val_idx]
-        train_val_labels = [item.label for item in train_val_items]
 
-        rel_train_idx, rel_val_idx = train_test_split(
-            list(range(len(train_val_items))),
-            test_size=val_size,
-            stratify=train_val_labels,
+        rel_train_idx, rel_val_idx = stratified_train_val_split(
+            train_val_items,
+            val_size=val_size,
             random_state=random_state + fold_idx,
         )
 

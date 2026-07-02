@@ -1,0 +1,14 @@
+# AGMTL-DenseCBAM thesis notebook dependencies
+# Target: Google Colab / Python 3.10-3.11
+# TensorFlow is usually preinstalled in Colab. Keep this unpinned enough for Colab compatibility.
+
+numpy>=1.26,<2.1
+pandas>=2.2,<2.3
+opencv-python-headless>=4.9,<5
+matplotlib>=3.8,<3.10
+scipy>=1.11,<1.15
+scikit-learn>=1.4,<1.6
+seaborn>=0.13,<0.14
+pillow>=10,<11
+ipykernel>=6.29,<7
+jupyter>=1.0,<2
