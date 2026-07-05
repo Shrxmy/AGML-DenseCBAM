@@ -244,7 +244,8 @@ class AttentionBlock(layers.Layer):
             k = tf.reshape(self.key_conv(inputs), [batch_size, height * width, -1])
             v = tf.reshape(self.value_conv(inputs), [batch_size, height * width, channels])
             attention_scores = tf.matmul(q, k, transpose_b=True)
-            attention_scores = attention_scores / tf.math.sqrt(tf.cast(tf.shape(k)[-1], tf.float32))
+            scale = tf.math.sqrt(tf.cast(tf.shape(k)[-1], attention_scores.dtype))
+            attention_scores = attention_scores / scale
             attention_weights = tf.nn.softmax(attention_scores, axis=-1)
             attended = tf.matmul(attention_weights, v)
             attended = tf.reshape(attended, [batch_size, height, width, channels])
