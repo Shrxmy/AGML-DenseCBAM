@@ -277,7 +277,7 @@ def build_benchmark_model(config: RunConfig) -> Model:
     backbone = make_backbone(config)
     pool3 = backbone.get_layer("pool3_relu").output
     pool3_att = AttentionBlock("self", name="benchmark_self_attention")(pool3)
-    pool3_down = layers.AveragePooling2D(pool_size=2, name="benchmark_pool3_downsample")(pool3_att)
+    pool3_down = layers.AveragePooling2D(pool_size=4, strides=4, name="benchmark_pool3_downsample")(pool3_att)
     conv5 = backbone.get_layer("conv5_block32_concat").output
     pool3_proj = layers.Conv2D(int(conv5.shape[-1]), 1, padding="same", name="benchmark_pool3_projection")(pool3_down)
     fused = layers.Concatenate(name="benchmark_fused_features")([conv5, pool3_proj])
