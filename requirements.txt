@@ -1,7 +1,9 @@
 # AGMTL-DenseCBAM thesis notebook dependencies
 # Target: Google Colab / Python 3.10-3.11
-# TensorFlow is usually preinstalled in Colab. Keep this unpinned enough for Colab compatibility.
+# TensorFlow is usually preinstalled in Colab. The range supports the Keras 3 API
+# used by the active training pipeline while avoiding unbounded major upgrades.
 
+tensorflow>=2.16,<2.21
 numpy>=1.26,<2.1
 pandas>=2.2,<2.3
 opencv-python-headless>=4.9,<5

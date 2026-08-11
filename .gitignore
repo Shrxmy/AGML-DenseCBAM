@@ -180,9 +180,12 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
-# Project datasets and generated folds
+# Project datasets, generated folds, and private annotation/group metadata
 /data/
 /data_5_fold/
+/private_metadata/
+/patient_groups.csv
+/expert_rois.csv
 
 # Trained models and checkpoints
 *.h5

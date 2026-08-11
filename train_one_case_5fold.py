@@ -13,6 +13,8 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Dict, List, Tuple
 
+os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "1")
+
 import cv2
 import numpy as np
 import pandas as pd
@@ -24,12 +26,7 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.regularizers import l2
 from tensorflow.keras.utils import Sequence as KerasSequence, to_categorical
 
-os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "1")
 tf.config.optimizer.set_jit(False)
-try:
-    mixed_precision.set_global_policy("mixed_float16")
-except Exception as exc:
-    print(f"Mixed precision not enabled: {exc}")
 
 TMD_LABELS = ["normal", "subluxation"]
 DISPLAY_LABELS = ["Normal", "Subluxation"]
@@ -47,13 +44,16 @@ class RunConfig:
     batch_size: int
     epochs: int
     learning_rate: float
-    weight_decay: float
+    l2_strength: float
     random_state: int
     freeze_backbone: bool
     tmd_loss_weight: float
     artifact_loss_weight: float
     fold_limit: int | None
     single_fold: str | None
+    verify_integrity: bool
+    mixed_precision: bool
+    class_weighting: bool
 
 
 def seed_everything(seed: int) -> None:
@@ -62,15 +62,79 @@ def seed_everything(seed: int) -> None:
     tf.random.set_seed(seed)
 
 
-def enable_memory_growth() -> None:
-    for gpu in tf.config.list_physical_devices("GPU"):
+def configure_tensorflow(config: RunConfig) -> None:
+    gpus = tf.config.list_physical_devices("GPU")
+    for gpu in gpus:
         try:
             tf.config.experimental.set_memory_growth(gpu, True)
         except Exception as exc:
             print(f"Could not enable memory growth for {gpu}: {exc}")
+    try:
+        tf.config.experimental.enable_op_determinism()
+    except Exception as exc:
+        print(f"Full TensorFlow determinism could not be enabled: {exc}")
+
+    policy = "mixed_float16" if config.mixed_precision and gpus else "float32"
+    mixed_precision.set_global_policy(policy)
+    print(f"TensorFlow precision policy: {policy}")
 
 
-def index_split_dataset(root: Path) -> pd.DataFrame:
+def sha256_file(path: Path, chunk_size: int = 1024 * 1024) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(chunk_size), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def validate_split_integrity(df: pd.DataFrame) -> None:
+    """Reject exact-image leakage and conflicting labels before training."""
+    audit = df.copy()
+    audit["content_sha256"] = audit["filepath"].map(lambda value: sha256_file(Path(value)))
+
+    conflicts = audit.groupby("content_sha256")["tmd_label"].nunique()
+    conflicting_hashes = set(conflicts[conflicts > 1].index)
+    split_counts = audit.groupby("content_sha256")["split"].nunique()
+    leaking_hashes = set(split_counts[split_counts > 1].index)
+
+    if conflicting_hashes or leaking_hashes:
+        raise ValueError(
+            "Dataset integrity check failed: "
+            f"{len(leaking_hashes)} exact-image groups cross train/validation/test and "
+            f"{len(conflicting_hashes)} groups carry conflicting labels. "
+            "Regenerate folds with make_5fold_dataset.py after reviewing duplicate_audit.csv."
+        )
+
+
+def validate_manifest_integrity(root: Path, expected_image_count: int) -> None:
+    manifest_path = root / "manifest.csv"
+    if not manifest_path.exists():
+        raise FileNotFoundError(
+            f"Integrity verification requires the generated fold manifest: {manifest_path}"
+        )
+    manifest = pd.read_csv(manifest_path)
+    required = {"fold_split", "content_sha256", "group_id"}
+    missing = required - set(manifest.columns)
+    if missing:
+        raise ValueError(
+            f"Legacy/incomplete manifest {manifest_path} is missing {sorted(missing)}. "
+            "Regenerate folds with the leakage-safe splitter."
+        )
+    if len(manifest) != expected_image_count:
+        raise ValueError(
+            f"Manifest/image count mismatch in {root}: {len(manifest)} rows vs "
+            f"{expected_image_count} indexed images."
+        )
+    leaking_groups = manifest.groupby("group_id")["fold_split"].nunique()
+    leaking_groups = leaking_groups[leaking_groups > 1]
+    if not leaking_groups.empty:
+        raise ValueError(
+            f"Patient/study group leakage detected in {root}: "
+            f"{len(leaking_groups)} groups cross train/validation/test."
+        )
+
+
+def index_split_dataset(root: Path, verify_integrity: bool = True) -> pd.DataFrame:
     rows: List[Dict[str, object]] = []
     class_to_idx = {name: idx for idx, name in enumerate(TMD_LABELS)}
     for split in ["train", "validation", "test"]:
@@ -94,6 +158,9 @@ def index_split_dataset(root: Path) -> pd.DataFrame:
     df = pd.DataFrame(rows)
     if df.empty:
         raise ValueError(f"No images found under {root}")
+    if verify_integrity:
+        validate_split_integrity(df)
+        validate_manifest_integrity(root, expected_image_count=len(df))
     return df
 
 
@@ -108,39 +175,56 @@ def add_motion_blur(image: np.ndarray, kernel_size: int = 9) -> np.ndarray:
     return ensure_uint8(cv2.filter2D(image, -1, kernel))
 
 
-def add_gaussian_noise(image: np.ndarray, sigma: float = 12.0) -> np.ndarray:
-    return ensure_uint8(image.astype(np.float32) + np.random.normal(0, sigma, image.shape))
+def add_gaussian_noise(
+    image: np.ndarray,
+    rng: np.random.Generator,
+    sigma: float = 12.0,
+) -> np.ndarray:
+    return ensure_uint8(image.astype(np.float32) + rng.normal(0, sigma, image.shape))
 
 
-def add_metal_streak(image: np.ndarray, num_streaks: int = 2) -> np.ndarray:
+def add_metal_streak(
+    image: np.ndarray,
+    rng: np.random.Generator,
+    num_streaks: int = 2,
+) -> np.ndarray:
     h, w = image.shape[:2]
     output = image.copy().astype(np.float32)
     for _ in range(max(1, num_streaks)):
         overlay = np.zeros_like(output)
-        intensity = np.random.randint(150, 235)
-        thickness = np.random.randint(1, 5)
+        intensity = int(rng.integers(150, 235))
+        thickness = int(rng.integers(1, 5))
         cv2.line(
             overlay,
-            (np.random.randint(0, w), np.random.randint(0, h)),
-            (np.random.randint(0, w), np.random.randint(0, h)),
+            (int(rng.integers(0, w)), int(rng.integers(0, h))),
+            (int(rng.integers(0, w)), int(rng.integers(0, h))),
             (intensity, intensity, intensity),
             thickness,
         )
-        overlay = cv2.GaussianBlur(overlay, (0, 0), sigmaX=float(np.random.uniform(2.0, 5.0)))
+        overlay = cv2.GaussianBlur(overlay, (0, 0), sigmaX=float(rng.uniform(2.0, 5.0)))
         output = np.maximum(output, overlay)
     return ensure_uint8(output)
 
 
-def apply_artifact(image: np.ndarray, artifact_label: int) -> np.ndarray:
+def apply_artifact(
+    image: np.ndarray,
+    artifact_label: int,
+    rng: np.random.Generator,
+) -> np.ndarray:
     if artifact_label == 0:
         return image
     if artifact_label == 1:
-        return add_motion_blur(image, kernel_size=int(np.random.choice([5, 7, 9, 11])))
+        return add_motion_blur(image, kernel_size=int(rng.choice([5, 7, 9, 11])))
     if artifact_label == 2:
-        return add_gaussian_noise(image, sigma=float(np.random.uniform(8.0, 18.0)))
+        return add_gaussian_noise(image, rng, sigma=float(rng.uniform(8.0, 18.0)))
     if artifact_label == 3:
-        return add_metal_streak(image, num_streaks=int(np.random.choice([1, 2, 3])))
+        return add_metal_streak(image, rng, num_streaks=int(rng.choice([1, 2, 3])))
     raise ValueError(f"Unknown artifact label: {artifact_label}")
+
+
+def densenet_preprocess(image: np.ndarray) -> np.ndarray:
+    """DenseNet ImageNet preprocessing (torch mode): [0, 255] -> [-1, 1]."""
+    return image.astype(np.float32) / 127.5 - 1.0
 
 
 class TMJSequence(KerasSequence):
@@ -153,6 +237,7 @@ class TMJSequence(KerasSequence):
         scenario: str,
         training: bool,
         seed: int,
+        tmd_class_weights: Dict[int, float] | None = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -162,8 +247,11 @@ class TMJSequence(KerasSequence):
         self.multi_task = multi_task
         self.scenario = scenario
         self.training = training
-        self.rng = np.random.default_rng(seed)
+        self.seed = seed
+        self.tmd_class_weights = tmd_class_weights
+        self.shuffle_rng = np.random.default_rng(seed)
         self.indices = np.arange(len(self.df))
+        self.epoch = -1
         self.on_epoch_end()
 
     def __len__(self) -> int:
@@ -171,15 +259,31 @@ class TMJSequence(KerasSequence):
 
     def on_epoch_end(self) -> None:
         if self.training:
-            self.rng.shuffle(self.indices)
+            self.epoch += 1
+            self.shuffle_rng.shuffle(self.indices)
 
-    def _artifact_for(self, filepath: str) -> int:
+    def _training_rng(self, filepath: str) -> np.random.Generator:
+        sample_id = Path(filepath).name
+        digest = hashlib.sha256(
+            f"{self.seed}:{self.epoch}:{sample_id}".encode("utf-8")
+        ).digest()
+        return np.random.default_rng(int.from_bytes(digest[:8], "little"))
+
+    def _evaluation_rng(self, filepath: str) -> np.random.Generator:
+        # Fold filenames contain the source content hash and remain stable across cases.
+        sample_id = Path(filepath).name
+        digest = hashlib.sha256(f"{self.seed}:{sample_id}".encode("utf-8")).digest()
+        return np.random.default_rng(int.from_bytes(digest[:8], "little"))
+
+    def _artifact_for(self, rng: np.random.Generator) -> int:
         if self.scenario == "clean":
             return 0
+        return int(rng.integers(0, len(ARTIFACT_LABELS)))
+
+    def evaluation_artifact_label(self, filepath: str) -> int:
         if self.training:
-            return int(self.rng.integers(0, len(ARTIFACT_LABELS)))
-        digest = hashlib.md5(filepath.encode("utf-8")).hexdigest()
-        return int(digest, 16) % len(ARTIFACT_LABELS)
+            raise RuntimeError("Deterministic artifact labels are only available for evaluation generators.")
+        return self._artifact_for(self._evaluation_rng(filepath))
 
     def _load_image(self, filepath: str) -> np.ndarray:
         image = cv2.imread(filepath)
@@ -195,10 +299,11 @@ class TMJSequence(KerasSequence):
         artifact_labels: List[int] = []
         for row in batch_df.itertuples(index=False):
             image = self._load_image(row.filepath)
-            if self.training and self.rng.random() < 0.5:
+            item_rng = self._training_rng(row.filepath) if self.training else self._evaluation_rng(row.filepath)
+            if self.training and item_rng.random() < 0.5:
                 image = cv2.flip(image, 1)
-            artifact_label = self._artifact_for(row.filepath)
-            image = apply_artifact(image, artifact_label).astype(np.float32) / 255.0
+            artifact_label = self._artifact_for(item_rng)
+            image = densenet_preprocess(apply_artifact(image, artifact_label, item_rng))
             images.append(image)
             tmd_labels.append(int(row.tmd_label))
             artifact_labels.append(int(artifact_label))
@@ -207,10 +312,28 @@ class TMJSequence(KerasSequence):
         y_tmd = to_categorical(np.array(tmd_labels), num_classes=len(TMD_LABELS))
         y_artifact = to_categorical(np.array(artifact_labels), num_classes=len(ARTIFACT_LABELS))
         if self.multi_task:
-            return x, {"tmd_output": y_tmd, "artifact_output": y_artifact}
+            targets = {"tmd_output": y_tmd, "artifact_output": y_artifact}
+            if self.training and self.tmd_class_weights:
+                sample_weights = {
+                    "tmd_output": np.asarray(
+                        [self.tmd_class_weights[label] for label in tmd_labels],
+                        dtype=np.float32,
+                    ),
+                    "artifact_output": np.ones(len(tmd_labels), dtype=np.float32),
+                }
+                return x, targets, sample_weights
+            return x, targets
+
+        if self.training and self.tmd_class_weights:
+            sample_weights = np.asarray(
+                [self.tmd_class_weights[label] for label in tmd_labels],
+                dtype=np.float32,
+            )
+            return x, y_tmd, sample_weights
         return x, y_tmd
 
 
+@tf.keras.utils.register_keras_serializable(package="AGMTL")
 class AttentionBlock(layers.Layer):
     def __init__(self, attention_type: str = "cbam", reduction_ratio: int = 16, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -234,6 +357,16 @@ class AttentionBlock(layers.Layer):
         else:
             raise ValueError(f"Unsupported attention type: {self.attention_type}")
         super().build(input_shape)
+
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                "attention_type": self.attention_type,
+                "reduction_ratio": self.reduction_ratio,
+            }
+        )
+        return config
 
     def call(self, inputs):
         if self.attention_type == "self":
@@ -283,7 +416,7 @@ def build_benchmark_model(config: RunConfig) -> Model:
     fused = layers.Concatenate(name="benchmark_fused_features")([conv5, pool3_proj])
     fused = layers.Conv2D(1024, 1, activation="relu", padding="same", name="benchmark_fusion_conv")(fused)
     x = layers.GlobalAveragePooling2D(name="benchmark_gap")(fused)
-    x = layers.Dense(512, activation="relu", kernel_regularizer=l2(config.weight_decay), name="benchmark_fc1")(x)
+    x = layers.Dense(512, activation="relu", kernel_regularizer=l2(config.l2_strength), name="benchmark_fc1")(x)
     x = layers.Dropout(0.5, name="benchmark_dropout")(x)
     x = layers.BatchNormalization(name="benchmark_bn")(x)
     x = layers.Dense(128, activation="relu", name="benchmark_fc2")(x)
@@ -297,13 +430,18 @@ def build_proposed_model(config: RunConfig) -> Model:
     x = AttentionBlock("cbam", name="cbam_attention")(conv5)
     x = layers.Conv2D(1024, 1, activation="relu", padding="same", name="cbam_refine_conv")(x)
     x = layers.GlobalAveragePooling2D(name="shared_gap")(x)
-    x = layers.Dense(512, activation="relu", kernel_regularizer=l2(config.weight_decay), name="shared_fc1")(x)
+    x = layers.Dense(512, activation="relu", kernel_regularizer=l2(config.l2_strength), name="shared_fc1")(x)
     x = layers.Dropout(0.5, name="shared_dropout")(x)
     x = layers.BatchNormalization(name="shared_bn")(x)
     x = layers.Dense(128, activation="relu", name="shared_fc2")(x)
     tmd_output = layers.Dense(len(TMD_LABELS), activation="softmax", dtype="float32", name="tmd_output")(x)
     artifact_output = layers.Dense(len(ARTIFACT_LABELS), activation="softmax", dtype="float32", name="artifact_output")(x)
-    return Model(backbone.input, [tmd_output, artifact_output], name="AGMTL_DenseCBAM")
+    # Explicit output mapping prevents metric/target ambiguity across Keras versions.
+    return Model(
+        backbone.input,
+        {"tmd_output": tmd_output, "artifact_output": artifact_output},
+        name="AGMTL_DenseCBAM",
+    )
 
 
 def compile_model(model: Model, config: RunConfig) -> None:
@@ -328,33 +466,121 @@ def compile_model(model: Model, config: RunConfig) -> None:
     )
 
 
-def collect_predictions(model: Model, generator: TMJSequence, multi_task: bool) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+def unpack_batch(batch):
+    """Return inputs and targets from a Keras batch with optional sample weights."""
+    if len(batch) == 3:
+        inputs, targets, _ = batch
+        return inputs, targets
+    return batch
+
+
+def balanced_class_weights(labels: pd.Series) -> Dict[int, float]:
+    counts = labels.value_counts().to_dict()
+    total = len(labels)
+    if set(counts) != set(range(len(TMD_LABELS))):
+        raise ValueError(f"Training split must contain every TMD class; found counts {counts}")
+    return {
+        label: total / (len(TMD_LABELS) * count)
+        for label, count in counts.items()
+    }
+
+
+def expected_calibration_error(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    confidence: np.ndarray,
+    n_bins: int = 10,
+) -> float:
+    if not (len(y_true) == len(y_pred) == len(confidence)):
+        raise ValueError("ECE arrays must have equal length.")
+    edges = np.linspace(0.0, 1.0, n_bins + 1)
+    correct = (y_true == y_pred).astype(np.float64)
+    ece = 0.0
+    for index in range(n_bins):
+        lower, upper = edges[index], edges[index + 1]
+        mask = (confidence > lower) & (confidence <= upper)
+        if index == 0:
+            mask |= confidence == 0.0
+        if mask.any():
+            ece += mask.mean() * abs(correct[mask].mean() - confidence[mask].mean())
+    return float(ece)
+
+
+def collect_predictions(
+    model: Model,
+    generator: TMJSequence,
+    multi_task: bool,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, List[str]]:
     y_true: List[int] = []
     y_pred: List[int] = []
     y_conf: List[float] = []
+    artifact_true: List[int] = []
+    artifact_pred: List[int] = []
+    artifact_conf: List[float] = []
+    filepaths: List[str] = []
+
     for i in range(len(generator)):
-        x, y = generator[i]
-        pred = model.predict(x, verbose=0)
-        pred_tmd = pred[0] if multi_task else pred
-        true_tmd = y["tmd_output"] if multi_task else y
+        start = i * generator.batch_size
+        stop = min((i + 1) * generator.batch_size, len(generator.df))
+        batch_indices = generator.indices[start:stop]
+        batch_df = generator.df.iloc[batch_indices]
+        batch_paths = batch_df["filepath"].tolist()
+        x, y = unpack_batch(generator[i])
+        pred = model(x, training=False)
+        if multi_task:
+            pred_tmd = np.asarray(pred["tmd_output"])
+            pred_artifact = np.asarray(pred["artifact_output"])
+            true_tmd = y["tmd_output"]
+            true_artifact = y["artifact_output"]
+            artifact_true.extend(np.argmax(true_artifact, axis=1).tolist())
+            artifact_pred.extend(np.argmax(pred_artifact, axis=1).tolist())
+            artifact_conf.extend(np.max(pred_artifact, axis=1).tolist())
+        else:
+            pred_tmd = np.asarray(pred)
+            true_tmd = y
+            artifact_true.extend(
+                generator.evaluation_artifact_label(filepath) for filepath in batch_paths
+            )
+
         y_true.extend(np.argmax(true_tmd, axis=1).tolist())
         y_pred.extend(np.argmax(pred_tmd, axis=1).tolist())
         y_conf.extend(np.max(pred_tmd, axis=1).tolist())
-    return np.array(y_true), np.array(y_pred), np.array(y_conf)
+        filepaths.extend(batch_paths)
+
+    return (
+        np.asarray(y_true),
+        np.asarray(y_pred),
+        np.asarray(y_conf),
+        np.asarray(artifact_true),
+        np.asarray(artifact_pred),
+        np.asarray(artifact_conf),
+        filepaths,
+    )
 
 
 def run_one_fold(fold_root: Path, config: RunConfig) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     print(f"\n=== Running {config.model_type} | {config.scenario} | {fold_root.name} ===")
     seed_everything(config.random_state)
 
-    df = index_split_dataset(fold_root)
+    df = index_split_dataset(fold_root, verify_integrity=config.verify_integrity)
     train_df = df[df["split"] == "train"].reset_index(drop=True)
     val_df = df[df["split"] == "validation"].reset_index(drop=True)
     test_df = df[df["split"] == "test"].reset_index(drop=True)
     print(df.groupby(["split", "class_name"]).size())
 
     multi_task = config.model_type == "proposed"
-    train_gen = TMJSequence(train_df, config.image_size, config.batch_size, multi_task, config.scenario, True, config.random_state)
+    class_weights = balanced_class_weights(train_df["tmd_label"]) if config.class_weighting else None
+    print("TMD class weights:", class_weights)
+    train_gen = TMJSequence(
+        train_df,
+        config.image_size,
+        config.batch_size,
+        multi_task,
+        config.scenario,
+        True,
+        config.random_state,
+        tmd_class_weights=class_weights,
+    )
     val_gen = TMJSequence(val_df, config.image_size, config.batch_size, multi_task, config.scenario, False, config.random_state)
     test_gen = TMJSequence(test_df, config.image_size, config.batch_size, multi_task, config.scenario, False, config.random_state)
 
@@ -364,10 +590,11 @@ def run_one_fold(fold_root: Path, config: RunConfig) -> Tuple[pd.DataFrame, pd.D
     case_dir = config.output_dir
     case_dir.mkdir(parents=True, exist_ok=True)
     checkpoint_path = case_dir / f"{fold_root.name}_{config.model_type}_{config.scenario}_best.keras"
+    monitor = "val_tmd_output_loss" if multi_task else "val_loss"
     callbacks = [
-        ModelCheckpoint(str(checkpoint_path), monitor="val_loss", save_best_only=True, verbose=1),
-        EarlyStopping(monitor="val_loss", patience=5, restore_best_weights=True, verbose=1),
-        ReduceLROnPlateau(monitor="val_loss", factor=0.2, patience=3, min_lr=1e-6, verbose=1),
+        ModelCheckpoint(str(checkpoint_path), monitor=monitor, mode="min", save_best_only=True, verbose=1),
+        EarlyStopping(monitor=monitor, mode="min", patience=5, restore_best_weights=True, verbose=1),
+        ReduceLROnPlateau(monitor=monitor, mode="min", factor=0.2, patience=3, min_lr=1e-6, verbose=1),
     ]
 
     history = model.fit(
@@ -378,14 +605,36 @@ def run_one_fold(fold_root: Path, config: RunConfig) -> Tuple[pd.DataFrame, pd.D
         callbacks=callbacks,
     )
 
+    # Warm up graph tracing before measuring end-to-end batch inference.
+    warmup_x, _ = unpack_batch(test_gen[0])
+    _ = model(warmup_x, training=False)
     start = time.perf_counter()
-    y_true, y_pred, y_conf = collect_predictions(model, test_gen, multi_task)
+    (
+        y_true,
+        y_pred,
+        y_conf,
+        artifact_true,
+        artifact_pred,
+        artifact_conf,
+        prediction_paths,
+    ) = collect_predictions(model, test_gen, multi_task)
     elapsed = time.perf_counter() - start
     images_per_second = len(y_true) / max(elapsed, 1e-8)
     latency_ms = 1000.0 / max(images_per_second, 1e-8)
 
     cm = confusion_matrix(y_true, y_pred, labels=[0, 1])
     tn, fp, fn, tp = cm.ravel()
+    manifest_path = fold_root / "manifest.csv"
+    fold_manifest_sha256 = sha256_file(manifest_path) if manifest_path.exists() else None
+
+    per_artifact_metrics: Dict[str, float | int] = {}
+    for artifact_index, artifact_name in enumerate(ARTIFACT_LABELS):
+        mask = artifact_true == artifact_index
+        per_artifact_metrics[f"n_{artifact_name}"] = int(mask.sum())
+        per_artifact_metrics[f"tmd_accuracy_{artifact_name}"] = (
+            accuracy_score(y_true[mask], y_pred[mask]) if mask.any() else np.nan
+        )
+
     result_df = pd.DataFrame(
         [
             {
@@ -397,6 +646,10 @@ def run_one_fold(fold_root: Path, config: RunConfig) -> Tuple[pd.DataFrame, pd.D
                 "recall": recall_score(y_true, y_pred, zero_division=0),
                 "specificity": tn / max(tn + fp, 1),
                 "f1": f1_score(y_true, y_pred, zero_division=0),
+                "artifact_accuracy": (
+                    accuracy_score(artifact_true, artifact_pred) if multi_task else np.nan
+                ),
+                "ece_10_bins": expected_calibration_error(y_true, y_pred, y_conf, n_bins=10),
                 "tn": int(tn),
                 "fp": int(fp),
                 "fn": int(fn),
@@ -404,11 +657,30 @@ def run_one_fold(fold_root: Path, config: RunConfig) -> Tuple[pd.DataFrame, pd.D
                 "images_per_second": images_per_second,
                 "latency_ms": latency_ms,
                 "epochs_ran": len(history.history.get("loss", [])),
+                "tensorflow_version": tf.__version__,
+                "precision_policy": mixed_precision.global_policy().name,
+                "class_weighting": config.class_weighting,
+                "fold_manifest_sha256": fold_manifest_sha256,
+                **per_artifact_metrics,
             }
         ]
     )
     cm_df = pd.DataFrame(cm, index=DISPLAY_LABELS, columns=DISPLAY_LABELS)
-    pred_df = pd.DataFrame({"y_true": y_true, "y_pred": y_pred, "confidence": y_conf})
+    pred_data: Dict[str, object] = {
+        "filepath": prediction_paths,
+        "y_true": y_true,
+        "y_pred": y_pred,
+        "confidence": y_conf,
+        "artifact_true": artifact_true,
+    }
+    if multi_task:
+        pred_data.update(
+            {
+                "artifact_pred": artifact_pred,
+                "artifact_confidence": artifact_conf,
+            }
+        )
+    pred_df = pd.DataFrame(pred_data)
     history_df = pd.DataFrame(history.history)
 
     result_df.to_csv(case_dir / f"{fold_root.name}_results.csv", index=False)
@@ -425,7 +697,7 @@ def run_one_fold(fold_root: Path, config: RunConfig) -> Tuple[pd.DataFrame, pd.D
 
 
 def run_case(config: RunConfig) -> pd.DataFrame:
-    enable_memory_growth()
+    configure_tensorflow(config)
     if config.model_type not in {"benchmark", "proposed"}:
         raise ValueError("model_type must be 'benchmark' or 'proposed'")
     if config.scenario not in {"clean", "artifact_mix"}:
@@ -457,6 +729,9 @@ def run_case(config: RunConfig) -> pd.DataFrame:
         serializable = asdict(config)
         serializable["folds_root"] = str(config.folds_root)
         serializable["output_dir"] = str(config.output_dir)
+        serializable["tensorflow_version"] = tf.__version__
+        serializable["gpu_devices"] = [device.name for device in tf.config.list_physical_devices("GPU")]
+        serializable["precision_policy"] = mixed_precision.global_policy().name
         json.dump(serializable, f, indent=2)
 
     for fold_root in fold_dirs:
@@ -467,9 +742,20 @@ def run_case(config: RunConfig) -> pd.DataFrame:
     combined = pd.concat(result_rows, ignore_index=True)
     combined.to_csv(config.output_dir / "all_fold_results.csv", index=False)
 
-    summary = combined[
-        ["accuracy", "precision", "recall", "specificity", "f1", "images_per_second", "latency_ms", "epochs_ran"]
-    ].agg(["mean", "std"]).T.reset_index(names="metric")
+    metric_columns = [
+        "accuracy",
+        "precision",
+        "recall",
+        "specificity",
+        "f1",
+        "ece_10_bins",
+        "images_per_second",
+        "latency_ms",
+        "epochs_ran",
+    ]
+    if combined["artifact_accuracy"].notna().any():
+        metric_columns.append("artifact_accuracy")
+    summary = combined[metric_columns].agg(["mean", "std"]).T.reset_index(names="metric")
     summary.to_csv(config.output_dir / "summary_mean_std.csv", index=False)
 
     if pooled_cm is not None:
@@ -492,13 +778,37 @@ def parse_args() -> RunConfig:
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--epochs", type=int, default=50)
     parser.add_argument("--learning_rate", type=float, default=1e-4)
-    parser.add_argument("--weight_decay", type=float, default=1e-2)
+    parser.add_argument(
+        "--l2_strength",
+        "--weight_decay",
+        dest="l2_strength",
+        type=float,
+        default=1e-2,
+        help="L2 kernel regularization strength. --weight_decay is retained as a deprecated alias.",
+    )
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--freeze_backbone", action="store_true")
     parser.add_argument("--tmd_loss_weight", type=float, default=1.0)
     parser.add_argument("--artifact_loss_weight", type=float, default=0.35)
     parser.add_argument("--fold_limit", type=int, default=None, help="Use 1 for smoke test; omit for all folds.")
     parser.add_argument("--single_fold", type=str, default=None, help="Run only one named fold, e.g. fold_2. Used by isolated runner.")
+    parser.add_argument(
+        "--skip_integrity_check",
+        action="store_true",
+        help="Debug only: bypass exact-image leakage validation. Never use for final thesis runs.",
+    )
+    parser.add_argument(
+        "--mixed_precision",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Use mixed_float16 when a GPU is available.",
+    )
+    parser.add_argument(
+        "--class_weighting",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Apply balanced TMD sample weights to the training loss.",
+    )
     args = parser.parse_args()
 
     output_dir = args.output_dir or Path("chapter4_results") / f"{args.model_type}_{args.scenario}"
@@ -511,13 +821,16 @@ def parse_args() -> RunConfig:
         batch_size=args.batch_size,
         epochs=args.epochs,
         learning_rate=args.learning_rate,
-        weight_decay=args.weight_decay,
+        l2_strength=args.l2_strength,
         random_state=args.seed,
         freeze_backbone=args.freeze_backbone,
         tmd_loss_weight=args.tmd_loss_weight,
         artifact_loss_weight=args.artifact_loss_weight,
         fold_limit=args.fold_limit,
         single_fold=args.single_fold,
+        verify_integrity=not args.skip_integrity_check,
+        mixed_precision=args.mixed_precision,
+        class_weighting=args.class_weighting,
     )
 
 
