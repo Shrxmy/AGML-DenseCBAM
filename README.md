@@ -27,6 +27,7 @@ The active pipeline now:
 | File | Purpose |
 |---|---|
 | `make_5fold_dataset.py` | Duplicate audit and leakage-resistant fold generation |
+| `audit_artifact_calibration.py` | Training-only V2 artifact previews and distortion audit; does not alter training |
 | `train_one_case_5fold.py` | Model, training, validation, and per-fold evaluation |
 | `run_case_5fold_isolated.py` | Runs one experimental case in a fresh process per fold |
 | `analyze_chapter4.py` | C1-C4 summary, plots, paired tests, and robustness comparison |
@@ -66,6 +67,21 @@ data/
 ```
 
 The original folder assignment is treated only as a source pool. New folds are created from the combined pool.
+
+## V2 artifact calibration (before any retraining)
+
+The completed V1 experiment is preserved under Git tag `pilot-v1` and `chapter4_results/final_3002_seed42/`. On branch `artifact-v2`, generate development-only previews before changing corruption parameters:
+
+```bash
+python audit_artifact_calibration.py \
+  --source_root data_5_fold/fold_1/train \
+  --output_dir chapter4_results/artifact_calibration_v2 \
+  --preview_samples 8 \
+  --metric_samples 200 \
+  --seed 42
+```
+
+Review `artifact_calibration_contact_sheet.png`, `artifact_distortion_summary.csv`, and `CALIBRATION_REVIEW.md`. The utility includes the V1 artifacts and preview-only mild/moderate/severe metal candidates. It does not modify source images or connect candidates to training. A final preset must be selected through visual/domain review rather than test accuracy.
 
 ## 1. Audit and generate safe folds
 
