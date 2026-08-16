@@ -21,13 +21,22 @@ import cv2
 import numpy as np
 import pandas as pd
 
-from train_one_case_5fold import (
-    IMAGE_EXTENSIONS,
-    add_gaussian_noise,
-    add_metal_streak,
-    add_motion_blur,
-    ensure_uint8,
-)
+try:
+    from .train_one_case_5fold import (
+        IMAGE_EXTENSIONS,
+        add_gaussian_noise,
+        add_metal_streak,
+        add_motion_blur,
+        ensure_uint8,
+    )
+except ImportError:  # Direct execution: python scripts/audit_artifact_calibration.py
+    from train_one_case_5fold import (
+        IMAGE_EXTENSIONS,
+        add_gaussian_noise,
+        add_metal_streak,
+        add_motion_blur,
+        ensure_uint8,
+    )
 
 Transform = Callable[[np.ndarray, np.random.Generator], np.ndarray]
 

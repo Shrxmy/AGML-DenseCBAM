@@ -8,18 +8,18 @@ This file records implementation/documentation alignment issues. It does not mod
 
 | Paper requirement | Active implementation |
 |---|---|
-| Stratified 5-fold evaluation | `make_5fold_dataset.py` and isolated fold runner |
+| Stratified 5-fold evaluation | `scripts/make_5fold_dataset.py` and isolated fold runner |
 | Normal vs Subluxation classification | TMD output with Subluxation as positive class |
 | Reconstructed connected-attention benchmark | Connected pool3 self-attention projected/fused with final DenseNet features |
 | DenseNet201 + CBAM proposed model | Channel and spatial CBAM after final DenseNet feature stage |
 | Auxiliary artifact detection | Four classes: none, motion blur, Gaussian noise, metal streak |
 | Class-weighted TMD loss | Balanced training sample weights, enabled by default for both models |
 | Mean and SD across folds | Per-case summaries and final C1-C4 analyzer |
-| Shapiro-Wilk → paired t-test/Wilcoxon | `analyze_chapter4.py`; defaults to the paper's one-tailed `greater` hypothesis and records the alternative |
+| Shapiro-Wilk → paired t-test/Wilcoxon | `scripts/analyze_chapter4.py`; defaults to the paper's one-tailed `greater` hypothesis and records the alternative |
 | Accuracy, precision, recall, specificity, F1 | Computed from held-out fold predictions |
 | Inference speed and latency | End-to-end batch pipeline timing after warm-up |
 | ECE | Ten-bin ECE stored per fold |
-| Grad-CAM | `generate_gradcam.py`, targeting benchmark fused features or proposed post-CBAM refined features |
+| Grad-CAM | `scripts/generate_gradcam.py`, targeting benchmark fused features or proposed post-CBAM refined features |
 | Localization Energy and IoU | Available only when an expert ROI CSV is supplied |
 | Clean vs artifact-mix cases C1-C4 | Standard result-directory layout and completeness validation |
 
@@ -59,7 +59,7 @@ The Sampling section states that Albumentations is used. The active reproducible
 
 ### 8. Statistical direction
 
-The Descriptive/Statistical Method specifies a one-tailed paired t-test, while other sections simply say paired t-test. The hypotheses are directional (“improvement/superior”), so a one-tailed test is defensible only if prespecified before examining final results. `analyze_chapter4.py` defaults to `greater` and records this choice; `--alternative two-sided` is available if the adviser requires a two-sided analysis.
+The Descriptive/Statistical Method specifies a one-tailed paired t-test, while other sections simply say paired t-test. The hypotheses are directional (“improvement/superior”), so a one-tailed test is defensible only if prespecified before examining final results. `scripts/analyze_chapter4.py` defaults to `greater` and records this choice; `--alternative two-sided` is available if the adviser requires a two-sided analysis.
 
 Normality should be evaluated on the **paired fold-wise differences**, not on each model's raw metric distribution separately. With only five folds, Shapiro-Wilk and inferential tests have very low power, and fold estimates are not fully independent. Report fold values, mean ± SD, 95% confidence intervals, effect sizes, and p-values without treating p-values as definitive proof.
 

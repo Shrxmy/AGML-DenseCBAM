@@ -26,13 +26,13 @@ The active pipeline now:
 
 | File | Purpose |
 |---|---|
-| `make_5fold_dataset.py` | Duplicate audit and leakage-resistant fold generation |
-| `audit_artifact_calibration.py` | Training-only V2 artifact previews and distortion audit; does not alter training |
-| `train_one_case_5fold.py` | Model, training, validation, and per-fold evaluation |
-| `run_case_5fold_isolated.py` | Runs one experimental case in a fresh process per fold |
-| `analyze_chapter4.py` | C1-C4 summary, plots, paired tests, and robustness comparison |
-| `AGML-DenseCBAM-Training.ipynb` | Notebook interface to the active scripts |
-| `THESIS_CODE_ALIGNMENT.md` | Direct audit of the paper's methodology against the implementation |
+| `scripts/make_5fold_dataset.py` | Duplicate audit and leakage-resistant fold generation |
+| `scripts/audit_artifact_calibration.py` | Training-only V2 artifact previews and distortion audit; does not alter training |
+| `scripts/train_one_case_5fold.py` | Model, training, validation, and per-fold evaluation |
+| `scripts/run_case_5fold_isolated.py` | Runs one experimental case in a fresh process per fold |
+| `scripts/analyze_chapter4.py` | C1-C4 summary, plots, paired tests, and robustness comparison |
+| `notebooks/AGML-DenseCBAM-Training.ipynb` | Notebook interface to the active scripts |
+| `docs/THESIS_CODE_ALIGNMENT.md` | Direct audit of the paper's methodology against the implementation |
 | `base/` | Base-study implementation retained for reference only |
 | `legacy/` | Prototypes retained for traceability; do not use for final experiments |
 
@@ -73,7 +73,7 @@ The original folder assignment is treated only as a source pool. New folds are c
 The completed V1 experiment is preserved under Git tag `pilot-v1` and `chapter4_results/final_3002_seed42/`. On branch `artifact-v2`, generate development-only previews before changing corruption parameters:
 
 ```bash
-python audit_artifact_calibration.py \
+python scripts/audit_artifact_calibration.py \
   --source_root data_5_fold/fold_1/train \
   --output_dir chapter4_results/artifact_calibration_v2 \
   --preview_samples 8 \
@@ -88,7 +88,7 @@ Review `artifact_calibration_contact_sheet.png`, `artifact_distortion_summary.cs
 First run with the default conflict policy:
 
 ```bash
-python make_5fold_dataset.py \
+python scripts/make_5fold_dataset.py \
   --input_root data \
   --output_root data_5_fold \
   --n_splits 5 \
@@ -105,7 +105,7 @@ data_5_fold/duplicate_audit.csv
 Review those rows with the dataset owner/domain expert. Correcting the source labels is preferred. If the research team formally approves excluding all ambiguous exact-image groups, document that decision and run:
 
 ```bash
-python make_5fold_dataset.py \
+python scripts/make_5fold_dataset.py \
   --input_root data \
   --output_root data_5_fold \
   --n_splits 5 \
@@ -137,7 +137,7 @@ All copies of every source image must be mapped. Final medical-imaging claims sh
 Use a separate smoke-test directory so partial results cannot be mixed with final results:
 
 ```bash
-python run_case_5fold_isolated.py \
+python scripts/run_case_5fold_isolated.py \
   --model_type proposed \
   --scenario artifact_mix \
   --epochs 2 \
@@ -152,10 +152,10 @@ Do not use `--skip_integrity_check` for any reported experiment.
 Use the same hyperparameters, folds, seed, and hardware for all cases.
 
 ```bash
-python run_case_5fold_isolated.py --model_type benchmark --scenario clean        --epochs 50 --output_dir chapter4_results/benchmark_clean
-python run_case_5fold_isolated.py --model_type benchmark --scenario artifact_mix --epochs 50 --output_dir chapter4_results/benchmark_artifact_mix
-python run_case_5fold_isolated.py --model_type proposed  --scenario clean        --epochs 50 --output_dir chapter4_results/proposed_clean
-python run_case_5fold_isolated.py --model_type proposed  --scenario artifact_mix --epochs 50 --output_dir chapter4_results/proposed_artifact_mix
+python scripts/run_case_5fold_isolated.py --model_type benchmark --scenario clean        --epochs 50 --output_dir chapter4_results/benchmark_clean
+python scripts/run_case_5fold_isolated.py --model_type benchmark --scenario artifact_mix --epochs 50 --output_dir chapter4_results/benchmark_artifact_mix
+python scripts/run_case_5fold_isolated.py --model_type proposed  --scenario clean        --epochs 50 --output_dir chapter4_results/proposed_clean
+python scripts/run_case_5fold_isolated.py --model_type proposed  --scenario artifact_mix --epochs 50 --output_dir chapter4_results/proposed_artifact_mix
 ```
 
 Useful options:
@@ -179,7 +179,7 @@ Useful options:
 This command deliberately fails if any case does not contain exactly five unique folds:
 
 ```bash
-python analyze_chapter4.py \
+python scripts/analyze_chapter4.py \
   --results_root chapter4_results \
   --expected_folds 5
 ```
@@ -202,7 +202,7 @@ The analyzer defaults to the paper's prespecified one-tailed superiority alterna
 After final training, generate a qualitative explanation from a final checkpoint:
 
 ```bash
-python generate_gradcam.py \
+python scripts/generate_gradcam.py \
   --checkpoint chapter4_results/proposed_artifact_mix/fold_1_proposed_artifact_mix_best.keras \
   --image data_5_fold/fold_1/test/subluxation/IMAGE.jpg \
   --model_type proposed \

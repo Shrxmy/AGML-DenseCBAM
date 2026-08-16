@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from make_5fold_dataset import (
+from scripts.make_5fold_dataset import (
     create_folds,
     prepare_unique_items,
     scan_source_images,

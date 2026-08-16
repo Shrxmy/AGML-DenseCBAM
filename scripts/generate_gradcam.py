@@ -13,12 +13,20 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
-from train_one_case_5fold import (
-    ARTIFACT_LABELS,
-    DISPLAY_LABELS,
-    AttentionBlock,
-    TMJSequence,
-)
+try:
+    from .train_one_case_5fold import (
+        ARTIFACT_LABELS,
+        DISPLAY_LABELS,
+        AttentionBlock,
+        TMJSequence,
+    )
+except ImportError:  # Direct execution: python scripts/generate_gradcam.py
+    from train_one_case_5fold import (
+        ARTIFACT_LABELS,
+        DISPLAY_LABELS,
+        AttentionBlock,
+        TMJSequence,
+    )
 
 TARGET_LAYERS = {
     "benchmark": "benchmark_fusion_conv",

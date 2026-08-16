@@ -102,7 +102,7 @@ def validate_split_integrity(df: pd.DataFrame) -> None:
             "Dataset integrity check failed: "
             f"{len(leaking_hashes)} exact-image groups cross train/validation/test and "
             f"{len(conflicting_hashes)} groups carry conflicting labels. "
-            "Regenerate folds with make_5fold_dataset.py after reviewing duplicate_audit.csv."
+            "Regenerate folds with scripts/make_5fold_dataset.py after reviewing duplicate_audit.csv."
         )
 
 
