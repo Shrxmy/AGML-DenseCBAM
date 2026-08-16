@@ -143,9 +143,9 @@ python scripts/run_case_5fold_isolated.py \
   --scenario artifact_mix \
   --epochs 5 \
   --batch_size 8 \
-  --artifact_loss_weight 0.1 \
+  --artifact_loss_weight 0.3 \
   --fold_limit 1 \
-  --output_dir chapter4_results/smoke_v2/proposed_artifact_mix
+  --output_dir chapter4_results/smoke_v2_pre_cbam/proposed_artifact_mix
 ```
 
 Do not use `--skip_integrity_check` for any reported experiment.
@@ -168,7 +168,7 @@ Useful options:
 --learning_rate 1e-4
 --l2_strength 1e-2
 --tmd_loss_weight 1.0
---artifact_loss_weight 0.1
+--artifact_loss_weight 0.3
 --freeze_backbone
 --no-mixed_precision
 --no-class_weighting
@@ -240,9 +240,10 @@ The artifact mix consists of none/clean, horizontal motion blur, Gaussian noise,
 - Validation/test artifact type and severity are deterministic per sample and seed.
 - Training artifacts remain stochastic but seeded.
 - Balanced class weighting is applied to the training TMD loss by default for both models; validation/test metrics remain unweighted.
-- The proposed model branches after the CBAM-refined shared DenseNet representation into a 1,024/128-unit TMD head and a separate 256-unit artifact head.
+- The proposed TMD head uses post-CBAM globally averaged features and a 1,024/128-unit classifier.
+- The 256-unit artifact head branches from pre-CBAM DenseNet features and concatenates global average/max pooling so localized artifacts are not erased by attention or averaging.
 - V2 uses moderate blur kernels 5–9, Gaussian sigma 8–12, and visible additive localized streaks under the locked protocol in `docs/ARTIFACT_V2_PROTOCOL.md`.
-- The auxiliary artifact-loss weight defaults to 0.1 so the primary TMD objective remains dominant.
+- The auxiliary artifact-loss weight defaults to 0.3; development smoke testing showed that 0.1 left the auxiliary loss at random chance.
 - `ReduceLROnPlateau` uses factor 0.1, patience 3, and minimum learning rate `1e-6`, matching the verified base-study configuration.
 - Checkpoint and early stopping monitor primary TMD validation loss.
 - Each fold runs in a fresh process to reduce GPU-memory fragmentation.

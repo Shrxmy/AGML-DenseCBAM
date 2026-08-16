@@ -31,7 +31,7 @@ tf.config.optimizer.set_jit(False)
 TMD_LABELS = ["normal", "subluxation"]
 DISPLAY_LABELS = ["Normal", "Subluxation"]
 ARTIFACT_LABELS = ["none", "motion_blur", "gaussian_noise", "metal_streak"]
-ARTIFACT_PROTOCOL = "v2_moderate_visible_streaks"
+ARTIFACT_PROTOCOL = "v2_moderate_pre_cbam_aux"
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff"}
 
 
@@ -463,15 +463,17 @@ def build_benchmark_model(config: RunConfig) -> Model:
 def build_proposed_model(config: RunConfig) -> Model:
     backbone = make_backbone(config)
     conv5 = backbone.get_layer("conv5_block32_concat").output
+
+    # TMD classification uses the CBAM-refined representation.
     attended = AttentionBlock("cbam", name="cbam_attention")(conv5)
-    shared = layers.GlobalAveragePooling2D(name="shared_gap")(attended)
+    tmd_features = layers.GlobalAveragePooling2D(name="tmd_gap")(attended)
 
     primary = layers.Dense(
         1024,
         activation="relu",
         kernel_regularizer=l2(config.l2_strength),
         name="tmd_fc1",
-    )(shared)
+    )(tmd_features)
     primary = layers.Dropout(0.5, name="tmd_dropout")(primary)
     primary = layers.BatchNormalization(name="tmd_bn")(primary)
     primary = layers.Dense(128, activation="relu", name="tmd_fc2")(primary)
@@ -482,12 +484,20 @@ def build_proposed_model(config: RunConfig) -> Model:
         name="tmd_output",
     )(primary)
 
+    # Artifact detection branches before CBAM so attention suppression cannot erase
+    # localized corruption evidence. Max pooling complements average pooling for
+    # sparse streaks while retaining a shared DenseNet201 encoder.
+    artifact_average = layers.GlobalAveragePooling2D(name="artifact_gap")(conv5)
+    artifact_maximum = layers.GlobalMaxPooling2D(name="artifact_gmp")(conv5)
+    artifact_features = layers.Concatenate(name="artifact_pooled_features")(
+        [artifact_average, artifact_maximum]
+    )
     auxiliary = layers.Dense(
         256,
         activation="relu",
         kernel_regularizer=l2(config.l2_strength),
         name="artifact_fc1",
-    )(shared)
+    )(artifact_features)
     auxiliary = layers.Dropout(0.3, name="artifact_dropout")(auxiliary)
     artifact_output = layers.Dense(
         len(ARTIFACT_LABELS),
@@ -883,7 +893,7 @@ def parse_args() -> RunConfig:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--freeze_backbone", action="store_true")
     parser.add_argument("--tmd_loss_weight", type=float, default=1.0)
-    parser.add_argument("--artifact_loss_weight", type=float, default=0.1)
+    parser.add_argument("--artifact_loss_weight", type=float, default=0.3)
     parser.add_argument("--fold_limit", type=int, default=None, help="Use 1 for smoke test; omit for all folds.")
     parser.add_argument("--single_fold", type=str, default=None, help="Run only one named fold, e.g. fold_2. Used by isolated runner.")
     parser.add_argument(

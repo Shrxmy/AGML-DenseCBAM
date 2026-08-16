@@ -19,12 +19,14 @@ The training-only calibration audit found that the V1 maximum-overlay metal tran
 
 Artifact categories remain sampled uniformly, including the clean category. Training corruption remains seeded and stochastic by epoch; validation/test corruption remains deterministic by sample and seed.
 
-## Multi-task weighting
+## Multi-task branch and weighting
 
 - Primary TMD loss weight: `1.0`
-- Auxiliary synthetic-artifact loss weight: `0.1`
+- Auxiliary synthetic-artifact loss weight: `0.3`
+- TMD branch input: post-CBAM DenseNet features with global average pooling
+- Artifact branch input: pre-CBAM DenseNet features with concatenated global average and global max pooling
 
-The auxiliary weight is reduced from V1's `0.3` because TMD classification is the primary endpoint and V1 showed evidence of negative transfer from an ambiguous auxiliary task. This value is locked before V2 test evaluation and must not be changed in response to test results.
+A development-only Fold 1 smoke test showed that weight `0.1` left artifact loss at random-chance cross-entropy (`≈ ln(4)`) for five epochs. Weight `0.3` restored auxiliary learning without reducing smoke-test TMD accuracy, so it is retained. A second smoke test showed that post-CBAM global-average features still collapsed clean and localized metal into one category. The artifact branch therefore uses pre-CBAM features and adds max pooling to preserve sparse corruption evidence. These decisions were made from development training/validation behavior before the final V2 five-fold run.
 
 ## Interpretation safeguards
 

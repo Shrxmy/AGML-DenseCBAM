@@ -89,7 +89,7 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--freeze_backbone", action="store_true")
     parser.add_argument("--tmd_loss_weight", type=float, default=1.0)
-    parser.add_argument("--artifact_loss_weight", type=float, default=0.1)
+    parser.add_argument("--artifact_loss_weight", type=float, default=0.3)
     parser.add_argument("--fold_limit", type=int, default=None, help="Use 1 for smoke test; omit for all folds.")
     parser.add_argument("--skip_existing", action="store_true", help="Skip folds whose fold_N_results.csv already exists.")
     parser.add_argument("--skip_integrity_check", action="store_true", help="Debug only; never use for final thesis runs.")
