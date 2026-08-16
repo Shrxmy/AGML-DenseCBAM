@@ -33,6 +33,14 @@ CORRUPTION_METRICS = [
     "tmd_accuracy_gaussian_noise",
     "tmd_accuracy_metal_streak",
 ]
+AUXILIARY_METRICS = [
+    "artifact_accuracy",
+    "artifact_macro_f1",
+    "artifact_recall_none",
+    "artifact_recall_motion_blur",
+    "artifact_recall_gaussian_noise",
+    "artifact_recall_metal_streak",
+]
 
 
 def load_cases(results_root: Path, expected_folds: int) -> pd.DataFrame:
@@ -76,7 +84,7 @@ def descriptive_summary(combined: pd.DataFrame) -> pd.DataFrame:
     rows = []
     metrics = PRIMARY_METRICS + EFFICIENCY_METRICS + CALIBRATION_METRICS + CORRUPTION_METRICS
     if "artifact_accuracy" in combined and combined["artifact_accuracy"].notna().any():
-        metrics.append("artifact_accuracy")
+        metrics.extend(metric for metric in AUXILIARY_METRICS if metric in combined)
 
     for case_name in CASES:
         case_df = combined[combined["case"] == case_name]

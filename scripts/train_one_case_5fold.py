@@ -31,6 +31,7 @@ tf.config.optimizer.set_jit(False)
 TMD_LABELS = ["normal", "subluxation"]
 DISPLAY_LABELS = ["Normal", "Subluxation"]
 ARTIFACT_LABELS = ["none", "motion_blur", "gaussian_noise", "metal_streak"]
+ARTIFACT_PROTOCOL = "v2_moderate_visible_streaks"
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff"}
 
 
@@ -183,11 +184,12 @@ def add_gaussian_noise(
     return ensure_uint8(image.astype(np.float32) + rng.normal(0, sigma, image.shape))
 
 
-def add_metal_streak(
+def add_metal_streak_v1(
     image: np.ndarray,
     rng: np.random.Generator,
     num_streaks: int = 2,
 ) -> np.ndarray:
+    """Preserved V1 maximum-overlay transform for calibration comparisons only."""
     h, w = image.shape[:2]
     output = image.copy().astype(np.float32)
     for _ in range(max(1, num_streaks)):
@@ -206,6 +208,40 @@ def add_metal_streak(
     return ensure_uint8(output)
 
 
+def add_metal_streak(
+    image: np.ndarray,
+    rng: np.random.Generator,
+    num_streaks: int = 2,
+) -> np.ndarray:
+    """Add localized, visible V2 radiopaque streaks without silently becoming clean."""
+    h, w = image.shape[:2]
+    output = image.astype(np.float32).copy()
+    combined_mask = np.zeros((h, w), dtype=np.float32)
+    for _ in range(max(1, num_streaks)):
+        mask = np.zeros((h, w), dtype=np.float32)
+        y_start = int(rng.integers(0, h))
+        y_end = int(np.clip(y_start + rng.integers(-h // 3, h // 3 + 1), 0, h - 1))
+        cv2.line(
+            mask,
+            (0, y_start),
+            (w - 1, y_end),
+            1.0,
+            int(rng.integers(2, 5)),
+        )
+        mask = cv2.GaussianBlur(mask, (0, 0), sigmaX=float(rng.uniform(1.5, 2.5)))
+        maximum = float(mask.max())
+        if maximum > 0:
+            mask /= maximum
+        combined_mask = np.maximum(combined_mask, mask * float(rng.uniform(80.0, 110.0)))
+
+    transformed = ensure_uint8(output + combined_mask[..., None])
+    if np.array_equal(transformed, image):
+        transformed = ensure_uint8(output - combined_mask[..., None])
+    if np.array_equal(transformed, image):
+        raise RuntimeError("V2 metal-streak transform produced no pixel change.")
+    return transformed
+
+
 def apply_artifact(
     image: np.ndarray,
     artifact_label: int,
@@ -214,11 +250,11 @@ def apply_artifact(
     if artifact_label == 0:
         return image
     if artifact_label == 1:
-        return add_motion_blur(image, kernel_size=int(rng.choice([5, 7, 9, 11])))
+        return add_motion_blur(image, kernel_size=int(rng.choice([5, 7, 9])))
     if artifact_label == 2:
-        return add_gaussian_noise(image, rng, sigma=float(rng.uniform(8.0, 18.0)))
+        return add_gaussian_noise(image, rng, sigma=float(rng.uniform(8.0, 12.0)))
     if artifact_label == 3:
-        return add_metal_streak(image, rng, num_streaks=int(rng.choice([1, 2, 3])))
+        return add_metal_streak(image, rng, num_streaks=int(rng.choice([1, 2])))
     raise ValueError(f"Unknown artifact label: {artifact_label}")
 
 
@@ -658,6 +694,11 @@ def run_one_fold(fold_root: Path, config: RunConfig) -> Tuple[pd.DataFrame, pd.D
         per_artifact_metrics[f"tmd_accuracy_{artifact_name}"] = (
             accuracy_score(y_true[mask], y_pred[mask]) if mask.any() else np.nan
         )
+        per_artifact_metrics[f"artifact_recall_{artifact_name}"] = (
+            float(np.mean(artifact_pred[mask] == artifact_index))
+            if multi_task and mask.any()
+            else np.nan
+        )
 
     result_df = pd.DataFrame(
         [
@@ -673,6 +714,17 @@ def run_one_fold(fold_root: Path, config: RunConfig) -> Tuple[pd.DataFrame, pd.D
                 "artifact_accuracy": (
                     accuracy_score(artifact_true, artifact_pred) if multi_task else np.nan
                 ),
+                "artifact_macro_f1": (
+                    f1_score(
+                        artifact_true,
+                        artifact_pred,
+                        labels=list(range(len(ARTIFACT_LABELS))),
+                        average="macro",
+                        zero_division=0,
+                    )
+                    if multi_task
+                    else np.nan
+                ),
                 "ece_10_bins": expected_calibration_error(y_true, y_pred, y_conf, n_bins=10),
                 "tn": int(tn),
                 "fp": int(fp),
@@ -683,6 +735,7 @@ def run_one_fold(fold_root: Path, config: RunConfig) -> Tuple[pd.DataFrame, pd.D
                 "epochs_ran": len(history.history.get("loss", [])),
                 "tensorflow_version": tf.__version__,
                 "precision_policy": mixed_precision.global_policy().name,
+                "artifact_protocol": ARTIFACT_PROTOCOL,
                 "class_weighting": config.class_weighting,
                 "fold_manifest_sha256": fold_manifest_sha256,
                 "training_script_sha256": sha256_file(Path(__file__).resolve()),
@@ -710,6 +763,17 @@ def run_one_fold(fold_root: Path, config: RunConfig) -> Tuple[pd.DataFrame, pd.D
 
     result_df.to_csv(case_dir / f"{fold_root.name}_results.csv", index=False)
     cm_df.to_csv(case_dir / f"{fold_root.name}_confusion_matrix.csv")
+    if multi_task:
+        artifact_cm = confusion_matrix(
+            artifact_true,
+            artifact_pred,
+            labels=list(range(len(ARTIFACT_LABELS))),
+        )
+        pd.DataFrame(
+            artifact_cm,
+            index=ARTIFACT_LABELS,
+            columns=ARTIFACT_LABELS,
+        ).to_csv(case_dir / f"{fold_root.name}_artifact_confusion_matrix.csv")
     pred_df.to_csv(case_dir / f"{fold_root.name}_predictions.csv", index=False)
     history_df.to_csv(case_dir / f"{fold_root.name}_history.csv", index=False)
 
@@ -757,6 +821,7 @@ def run_case(config: RunConfig) -> pd.DataFrame:
         serializable["tensorflow_version"] = tf.__version__
         serializable["gpu_devices"] = [device.name for device in tf.config.list_physical_devices("GPU")]
         serializable["precision_policy"] = mixed_precision.global_policy().name
+        serializable["artifact_protocol"] = ARTIFACT_PROTOCOL
         serializable["training_script_sha256"] = sha256_file(Path(__file__).resolve())
         json.dump(serializable, f, indent=2)
 
@@ -780,7 +845,10 @@ def run_case(config: RunConfig) -> pd.DataFrame:
         "epochs_ran",
     ]
     if combined["artifact_accuracy"].notna().any():
-        metric_columns.append("artifact_accuracy")
+        metric_columns.extend(["artifact_accuracy", "artifact_macro_f1"])
+        metric_columns.extend(
+            f"artifact_recall_{artifact_name}" for artifact_name in ARTIFACT_LABELS
+        )
     summary = combined[metric_columns].agg(["mean", "std"]).T.reset_index(names="metric")
     summary.to_csv(config.output_dir / "summary_mean_std.csv", index=False)
 
@@ -815,7 +883,7 @@ def parse_args() -> RunConfig:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--freeze_backbone", action="store_true")
     parser.add_argument("--tmd_loss_weight", type=float, default=1.0)
-    parser.add_argument("--artifact_loss_weight", type=float, default=0.3)
+    parser.add_argument("--artifact_loss_weight", type=float, default=0.1)
     parser.add_argument("--fold_limit", type=int, default=None, help="Use 1 for smoke test; omit for all folds.")
     parser.add_argument("--single_fold", type=str, default=None, help="Run only one named fold, e.g. fold_2. Used by isolated runner.")
     parser.add_argument(

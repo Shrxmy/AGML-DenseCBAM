@@ -45,7 +45,11 @@ def combine_outputs(output_dir: Path, fold_names: List[str]) -> None:
 
     metric_cols = ["accuracy", "precision", "recall", "specificity", "f1", "ece_10_bins", "images_per_second", "latency_ms", "epochs_ran"]
     if "artifact_accuracy" in combined and combined["artifact_accuracy"].notna().any():
-        metric_cols.append("artifact_accuracy")
+        metric_cols.extend(["artifact_accuracy", "artifact_macro_f1"])
+        metric_cols.extend(
+            f"artifact_recall_{name}"
+            for name in ["none", "motion_blur", "gaussian_noise", "metal_streak"]
+        )
     summary = combined[metric_cols].agg(["mean", "std"]).T.reset_index(names="metric")
     summary.to_csv(output_dir / "summary_mean_std.csv", index=False)
 
@@ -85,7 +89,7 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--freeze_backbone", action="store_true")
     parser.add_argument("--tmd_loss_weight", type=float, default=1.0)
-    parser.add_argument("--artifact_loss_weight", type=float, default=0.3)
+    parser.add_argument("--artifact_loss_weight", type=float, default=0.1)
     parser.add_argument("--fold_limit", type=int, default=None, help="Use 1 for smoke test; omit for all folds.")
     parser.add_argument("--skip_existing", action="store_true", help="Skip folds whose fold_N_results.csv already exists.")
     parser.add_argument("--skip_integrity_check", action="store_true", help="Debug only; never use for final thesis runs.")

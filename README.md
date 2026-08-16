@@ -33,6 +33,7 @@ The active pipeline now:
 | `scripts/analyze_chapter4.py` | C1-C4 summary, plots, paired tests, and robustness comparison |
 | `notebooks/AGML-DenseCBAM-Training.ipynb` | Notebook interface to the active scripts |
 | `docs/THESIS_CODE_ALIGNMENT.md` | Direct audit of the paper's methodology against the implementation |
+| `docs/ARTIFACT_V2_PROTOCOL.md` | Locked V2 corruption ranges, rationale, and safeguards |
 | `base/` | Base-study implementation retained for reference only |
 | `legacy/` | Prototypes retained for traceability; do not use for final experiments |
 
@@ -81,7 +82,7 @@ python scripts/audit_artifact_calibration.py \
   --seed 42
 ```
 
-Review `artifact_calibration_contact_sheet.png`, `artifact_distortion_summary.csv`, and `CALIBRATION_REVIEW.md`. The utility includes the V1 artifacts and preview-only mild/moderate/severe metal candidates. It does not modify source images or connect candidates to training. A final preset must be selected through visual/domain review rather than test accuracy.
+Review `artifact_calibration_contact_sheet.png`, `artifact_distortion_summary.csv`, and `CALIBRATION_REVIEW.md`. The audit established that V1 metal augmentation was pixel-identical for 25% of the 200 sampled training images. The corrective, moderate V2 ranges are locked in `docs/ARTIFACT_V2_PROTOCOL.md`; they are applied identically to benchmark and proposed artifact-mix cases and do not guarantee proposed-model superiority.
 
 ## 1. Audit and generate safe folds
 
@@ -140,9 +141,11 @@ Use a separate smoke-test directory so partial results cannot be mixed with fina
 python scripts/run_case_5fold_isolated.py \
   --model_type proposed \
   --scenario artifact_mix \
-  --epochs 2 \
+  --epochs 5 \
+  --batch_size 8 \
+  --artifact_loss_weight 0.1 \
   --fold_limit 1 \
-  --output_dir chapter4_results/smoke_proposed_artifact_mix
+  --output_dir chapter4_results/smoke_v2/proposed_artifact_mix
 ```
 
 Do not use `--skip_integrity_check` for any reported experiment.
@@ -152,10 +155,10 @@ Do not use `--skip_integrity_check` for any reported experiment.
 Use the same hyperparameters, folds, seed, and hardware for all cases.
 
 ```bash
-python scripts/run_case_5fold_isolated.py --model_type benchmark --scenario clean        --epochs 50 --output_dir chapter4_results/benchmark_clean
-python scripts/run_case_5fold_isolated.py --model_type benchmark --scenario artifact_mix --epochs 50 --output_dir chapter4_results/benchmark_artifact_mix
-python scripts/run_case_5fold_isolated.py --model_type proposed  --scenario clean        --epochs 50 --output_dir chapter4_results/proposed_clean
-python scripts/run_case_5fold_isolated.py --model_type proposed  --scenario artifact_mix --epochs 50 --output_dir chapter4_results/proposed_artifact_mix
+python scripts/run_case_5fold_isolated.py --model_type benchmark --scenario clean        --epochs 50 --output_dir chapter4_results/final_v2/benchmark_clean
+python scripts/run_case_5fold_isolated.py --model_type benchmark --scenario artifact_mix --epochs 50 --output_dir chapter4_results/final_v2/benchmark_artifact_mix
+python scripts/run_case_5fold_isolated.py --model_type proposed  --scenario clean        --epochs 50 --output_dir chapter4_results/final_v2/proposed_clean
+python scripts/run_case_5fold_isolated.py --model_type proposed  --scenario artifact_mix --epochs 50 --output_dir chapter4_results/final_v2/proposed_artifact_mix
 ```
 
 Useful options:
@@ -165,7 +168,7 @@ Useful options:
 --learning_rate 1e-4
 --l2_strength 1e-2
 --tmd_loss_weight 1.0
---artifact_loss_weight 0.3
+--artifact_loss_weight 0.1
 --freeze_backbone
 --no-mixed_precision
 --no-class_weighting
@@ -180,11 +183,11 @@ This command deliberately fails if any case does not contain exactly five unique
 
 ```bash
 python scripts/analyze_chapter4.py \
-  --results_root chapter4_results \
+  --results_root chapter4_results/final_v2 \
   --expected_folds 5
 ```
 
-Outputs are written to `chapter4_results/analysis/`:
+Outputs are written to `chapter4_results/final_v2/analysis/`:
 
 - all-case fold results;
 - mean, SD, and 95% confidence intervals;
@@ -238,7 +241,8 @@ The artifact mix consists of none/clean, horizontal motion blur, Gaussian noise,
 - Training artifacts remain stochastic but seeded.
 - Balanced class weighting is applied to the training TMD loss by default for both models; validation/test metrics remain unweighted.
 - The proposed model branches after the CBAM-refined shared DenseNet representation into a 1,024/128-unit TMD head and a separate 256-unit artifact head.
-- The auxiliary artifact-loss weight defaults to 0.3.
+- V2 uses moderate blur kernels 5–9, Gaussian sigma 8–12, and visible additive localized streaks under the locked protocol in `docs/ARTIFACT_V2_PROTOCOL.md`.
+- The auxiliary artifact-loss weight defaults to 0.1 so the primary TMD objective remains dominant.
 - `ReduceLROnPlateau` uses factor 0.1, patience 3, and minimum learning rate `1e-6`, matching the verified base-study configuration.
 - Checkpoint and early stopping monitor primary TMD validation loss.
 - Each fold runs in a fresh process to reduce GPU-memory fragmentation.

@@ -53,25 +53,29 @@ CBAM is not only a Spatial Attention Module. It sequentially contains channel at
 
 The implementation creates controlled synthetic corruptions. It does not detect independently annotated real clinical artifacts and does not perform physical metal-artifact reconstruction. Replace unqualified claims such as “clinical artifact detection” with “synthetic artifact-type classification” where appropriate, and avoid claiming demonstrated real-world clinical reliability without external validation.
 
-### 7. Augmentation library mismatch
+### 7. V2 synthetic-artifact correction
+
+The completed V1 pilot revealed that the maximum-overlay metal transform produced no pixel change in 25% of a 200-image training-only audit and caused clean/metal auxiliary-class collapse. V1 is preserved under Git tag `pilot-v1`. The corrective V2 ranges and reduced auxiliary-loss weight are locked in `docs/ARTIFACT_V2_PROTOCOL.md` before V2 test evaluation. Both benchmark and proposed models must receive the same V2 corruption distribution.
+
+### 8. Augmentation library mismatch
 
 The Sampling section states that Albumentations is used. The active reproducible implementation uses OpenCV and NumPy for motion blur, Gaussian noise, and simulated bright streaks. Either revise the paper to name OpenCV/NumPy or deliberately replace/test the implementation with a fixed Albumentations version. Do not claim a library that did not generate the final data.
 
-### 8. Statistical direction
+### 9. Statistical direction
 
 The Descriptive/Statistical Method specifies a one-tailed paired t-test, while other sections simply say paired t-test. The hypotheses are directional (“improvement/superior”), so a one-tailed test is defensible only if prespecified before examining final results. `scripts/analyze_chapter4.py` defaults to `greater` and records this choice; `--alternative two-sided` is available if the adviser requires a two-sided analysis.
 
 Normality should be evaluated on the **paired fold-wise differences**, not on each model's raw metric distribution separately. With only five folds, Shapiro-Wilk and inferential tests have very low power, and fold estimates are not fully independent. Report fold values, mean ± SD, 95% confidence intervals, effect sizes, and p-values without treating p-values as definitive proof.
 
-### 9. ROI requirement
+### 10. ROI requirement
 
 The paper states that manually annotated condyle/glenoid-fossa bounding boxes are used for Localization Energy and IoU, but no expert ROI file is present. Those outcomes cannot be claimed until ROI annotations, annotator credentials/procedure, and the prespecified Grad-CAM threshold are documented.
 
-### 10. Hardware comparability
+### 11. Hardware comparability
 
 The paper lists an RTX 4050 laptop and an Apple M3 device. C1-C4 inference speed, latency, and paired performance comparisons should be generated on the same final software environment and, for efficiency claims, the same hardware. Do not average speed measurements from heterogeneous devices. Record which device produced every final run.
 
-### 11. Benchmark wording
+### 12. Benchmark wording
 
 The verified official v1.0 notebook is byte-for-byte identical to `base/Sacncar-Main.ipynb`. It uses one fixed train/validation/test directory layout and contains no five-fold loop. It also computes attention from `pool3_relu` and immediately overwrites that tensor with `conv5_block32_concat`, so the released attention output does not reach the classifier.
 
@@ -89,7 +93,7 @@ The active code therefore reconstructs the connected benchmark architecture from
 
 ## Result status
 
-No existing repository metric is approved as a final Chapter IV result. The old single-fold output predates leakage protection and has a test count inconsistent with the current fold. Final tables must be generated only after:
+No existing repository metric is approved as a final Chapter IV result. The completed V1 five-fold run is an explicitly preserved pilot because its synthetic metal transform could silently become a no-op; the old single-fold output also predates leakage protection and has a test count inconsistent with the current fold. Final tables must be generated only after:
 
 1. duplicate-label adjudication;
 2. patient/original-study grouping where metadata is available;

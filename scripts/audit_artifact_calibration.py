@@ -26,6 +26,7 @@ try:
         IMAGE_EXTENSIONS,
         add_gaussian_noise,
         add_metal_streak,
+        add_metal_streak_v1,
         add_motion_blur,
         ensure_uint8,
     )
@@ -34,6 +35,7 @@ except ImportError:  # Direct execution: python scripts/audit_artifact_calibrati
         IMAGE_EXTENSIONS,
         add_gaussian_noise,
         add_metal_streak,
+        add_metal_streak_v1,
         add_motion_blur,
         ensure_uint8,
     )
@@ -148,8 +150,17 @@ def transformations() -> Dict[str, Transform]:
         "motion_k9": lambda image, rng: add_motion_blur(image, kernel_size=9),
         "noise_sigma8": lambda image, rng: add_gaussian_noise(image, rng, sigma=8.0),
         "noise_sigma18": lambda image, rng: add_gaussian_noise(image, rng, sigma=18.0),
-        "metal_v1_current": lambda image, rng: add_metal_streak(
+        "motion_v2_locked": lambda image, rng: add_motion_blur(
+            image, kernel_size=int(rng.choice([5, 7, 9]))
+        ),
+        "noise_v2_locked": lambda image, rng: add_gaussian_noise(
+            image, rng, sigma=float(rng.uniform(8.0, 12.0))
+        ),
+        "metal_v1_current": lambda image, rng: add_metal_streak_v1(
             image, rng, num_streaks=int(rng.choice([1, 2, 3]))
+        ),
+        "metal_v2_locked": lambda image, rng: add_metal_streak(
+            image, rng, num_streaks=int(rng.choice([1, 2]))
         ),
         "metal_candidate_mild": lambda image, rng: add_candidate_metal_streak(
             image, rng, "mild"
