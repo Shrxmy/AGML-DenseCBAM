@@ -1,4 +1,4 @@
-# AGMTL-DenseCBAM
+# AGML-DenseCBAM
 
 Leakage-resistant experimental pipeline for **Normal vs Subluxation** classification from TMJ panoramic radiograph images. The proposed model combines an ImageNet-pretrained DenseNet201 encoder, CBAM attention, a primary TMD classifier, and an auxiliary synthetic-artifact classifier.
 
@@ -6,7 +6,7 @@ Leakage-resistant experimental pipeline for **Normal vs Subluxation** classifica
 
 ## Important validity status
 
-The original 3,425-file dataset contains exact duplicate images, including duplicates crossing the original train/validation/test folders and a small number carrying conflicting labels. Old folds and the result under `chapter4_results/oldstyle_results/` were produced before leakage protection was added. They are retained only as legacy evidence and **must not be reported as final Chapter IV results**.
+The current local 3,425-image working copy contains exact duplicate pixels, including copies crossing its train/validation/test folders and a small number carrying conflicting labels. This audit has not yet established whether those issues also occur in the complete official Figshare archive or were introduced when the local fixed split was prepared. Old folds and the results under `oldstyle_results/` and `chapter4_results/` were produced before the current leakage protection and architecture cleanup. They are retained only as legacy evidence and **must not be reported as final Chapter IV results**.
 
 The active pipeline now:
 
@@ -15,6 +15,7 @@ The active pipeline now:
 - rejects conflicting-label copies unless exclusion is explicitly approved;
 - keeps exact copies and optional patient/study groups within one split;
 - validates train/validation/test integrity before every final run;
+- fingerprints fold manifests and active training scripts so stale results cannot be resumed;
 - uses deterministic validation/test corruptions;
 - applies DenseNet201 ImageNet preprocessing;
 - maps multi-task outputs explicitly by name;
@@ -29,29 +30,25 @@ The active pipeline now:
 | `train_one_case_5fold.py` | Model, training, validation, and per-fold evaluation |
 | `run_case_5fold_isolated.py` | Runs one experimental case in a fresh process per fold |
 | `analyze_chapter4.py` | C1-C4 summary, plots, paired tests, and robustness comparison |
-| `AGMTL-DenseCBAM-Training.ipynb` | Notebook interface to the active scripts |
+| `AGML-DenseCBAM-Training.ipynb` | Notebook interface to the active scripts |
 | `THESIS_CODE_ALIGNMENT.md` | Direct audit of the paper's methodology against the implementation |
 | `base/` | Base-study implementation retained for reference only |
 | `legacy/` | Prototypes retained for traceability; do not use for final experiments |
 
 ## Environment
 
-Recommended: Python 3.10 or 3.11 and an NVIDIA GPU/Google Colab runtime.
+The prepared WSL2 environment is the Miniforge environment `thesis-env` (Python 3.13.13, TensorFlow 2.21.0). Activate it before every test or training command:
 
 ```bash
-python -m venv .venv
-# Windows
-.venv\Scripts\activate
-# Linux/macOS
-# source .venv/bin/activate
+source /home/solyvie/environments/miniforge3/etc/profile.d/conda.sh
+conda activate thesis-env
+cd /home/solyvie/workspace/thesis-projects/working-run/AGML-DenseCBAM
 
-python -m pip install --upgrade pip
-pip install -r requirements.txt
 python scripts/check_tf_gpu.py
 python -m unittest discover -s tests -v
 ```
 
-TensorFlow GPU support depends on the operating system/CUDA environment. Current native Windows TensorFlow releases may require WSL2 for modern NVIDIA GPU support.
+Do not run `pip install -r requirements.txt` in the prepared environment unless packages are missing. The file records the exact environment for later recreation. Seeing the GPU in `nvidia-smi` is not sufficient; `scripts/check_tf_gpu.py` must also show a TensorFlow GPU device.
 
 ## Expected source data
 
@@ -152,7 +149,7 @@ Useful options:
 --learning_rate 1e-4
 --l2_strength 1e-2
 --tmd_loss_weight 1.0
---artifact_loss_weight 0.35
+--artifact_loss_weight 0.3
 --freeze_backbone
 --no-mixed_precision
 --no-class_weighting
@@ -211,8 +208,8 @@ Then add `--roi_csv expert_rois.csv`. The default IoU heatmap threshold is 0.5 a
 |---|---|---|
 | C1 | DenseNet201 connected self-attention benchmark | Clean |
 | C2 | DenseNet201 connected self-attention benchmark | Artifact mix |
-| C3 | AGMTL-DenseCBAM | Clean |
-| C4 | AGMTL-DenseCBAM | Artifact mix |
+| C3 | AGML-DenseCBAM | Clean |
+| C4 | AGML-DenseCBAM | Artifact mix |
 
 The artifact mix consists of none/clean, horizontal motion blur, Gaussian noise, and simulated bright streaks. These are **synthetic corruption categories**, not validated labels for real clinical acquisition artifacts.
 
@@ -224,9 +221,13 @@ The artifact mix consists of none/clean, horizontal motion blur, Gaussian noise,
 - Validation/test artifact type and severity are deterministic per sample and seed.
 - Training artifacts remain stochastic but seeded.
 - Balanced class weighting is applied to the training TMD loss by default for both models; validation/test metrics remain unweighted.
+- The proposed model branches after the CBAM-refined shared DenseNet representation into a 1,024/128-unit TMD head and a separate 256-unit artifact head.
+- The auxiliary artifact-loss weight defaults to 0.3.
+- `ReduceLROnPlateau` uses factor 0.1, patience 3, and minimum learning rate `1e-6`, matching the verified base-study configuration.
 - Checkpoint and early stopping monitor primary TMD validation loss.
 - Each fold runs in a fresh process to reduce GPU-memory fragmentation.
 - Pipeline throughput includes loading, preprocessing, and model inference; compare speed only on identical hardware/settings.
+- Every fold result records both the fold-manifest SHA-256 and active training-script SHA-256; `--skip_existing` rejects stale outputs when either changes.
 - Result directories and datasets are ignored by Git because they may contain large or sensitive files. Archive final CSV/config outputs separately with checksums.
 
 ## Known limitations

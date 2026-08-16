@@ -27,9 +27,9 @@ This file records implementation/documentation alignment issues. It does not mod
 
 ### 1. Unit of analysis and group leakage
 
-The paper distinguishes **2,135 original panoramic files** from **3,425 extracted open-mouth TMJ images**. The code currently receives only the 3,425 extracted images. Images originating from the same panorama/patient must not be divided between training and testing.
+The base study distinguishes **2,135 retained four-frame source radiographs** from **3,425 extracted open-mouth TMJ images**. Its published discussion explicitly states that five-fold cross-validation was image-wise rather than patient-wise and acknowledges possible patient-level leakage. The active thesis code currently receives only the 3,425 extracted images.
 
-Required action: recover the extraction provenance and prepare `source_path,group_id` metadata for `--groups_csv`, where `group_id` identifies the original panorama or patient. Exact-image deduplication is already implemented, but it cannot infer patient identity.
+For exact methodological replication, the absence of patient grouping must be disclosed because it matches the base study's acknowledged image-wise limitation. For the stronger primary thesis evaluation, recover extraction provenance when available and prepare `source_path,group_id` metadata for `--groups_csv`, where `group_id` identifies the original panorama or patient. Exact-image deduplication is already implemented, but it cannot infer patient identity.
 
 ### 2. Conflicting sampling descriptions
 
@@ -39,11 +39,11 @@ Recommended final wording: combine the source pool, form patient/original-study-
 
 ### 3. Duplicate and label audit
 
-The source files contain exact duplicate content, including eight exact-content groups carrying conflicting labels. `data_5_fold/duplicate_audit.csv` identifies them. The research team/domain expert must correct those labels or formally approve excluding all ambiguous groups. The decision and resulting final sample count must be reported.
+The current local working copy contains exact duplicate content, including eight exact-content groups carrying conflicting labels. `data_5_fold/duplicate_audit.csv` identifies them. It has not yet been established whether these issues exist in the complete official Figshare archive or arose in the preparation of the local fixed split. The research team/domain expert must correct those labels or formally approve excluding all ambiguous groups. The decision and resulting final sample count must be reported.
 
 ### 4. Acronym consistency
 
-The paper alternates between `AGML` and `AGMTL`; the repository uses `AGMTL-DenseCBAM`. Select one acronym and use it in the title, objectives, hypotheses, figures, definitions, filenames, and Chapter IV. `AGMTL` more explicitly preserves “Multi-task Learning.”
+Use `AGML-DenseCBAM` consistently in code and repository documentation because `AGML` is the acronym defined in the thesis and used by the WSL project directory. Update any remaining thesis figures, captions, or filenames that still say `AGMTL`.
 
 ### 5. CBAM terminology
 
@@ -73,7 +73,9 @@ The paper lists an RTX 4050 laptop and an Apple M3 device. C1-C4 inference speed
 
 ### 11. Benchmark wording
 
-The code reconstructs the benchmark architecture from the publication description; it does not use original benchmark weights. Continue describing it as a **reconstructed benchmark**. Any architectural deviation from Sancar et al. must be disclosed.
+The verified official v1.0 notebook is byte-for-byte identical to `base/Sacncar-Main.ipynb`. It uses one fixed train/validation/test directory layout and contains no five-fold loop. It also computes attention from `pool3_relu` and immediately overwrites that tensor with `conv5_block32_concat`, so the released attention output does not reach the classifier.
+
+The active code therefore reconstructs the connected benchmark architecture from the publication description; it does not use original benchmark weights or recover the unpublished fold assignments. Continue describing it as a **reconstructed benchmark** and disclose architectural or preprocessing deviations from Sancar et al.
 
 ## Paper consistency corrections
 

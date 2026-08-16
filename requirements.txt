@@ -1,16 +1,14 @@
-# AGMTL-DenseCBAM thesis notebook dependencies
-# Target: Google Colab / Python 3.10-3.11
-# TensorFlow is usually preinstalled in Colab. The range supports the Keras 3 API
-# used by the active training pipeline while avoiding unbounded major upgrades.
+# Exact WSL2 environment used for final AGML-DenseCBAM experiments.
+# Python: 3.13.13; GPU verified with TensorFlow 2.21.0 on the RTX 4050.
+# The CUDA extra recreates TensorFlow's pip-managed NVIDIA runtime libraries.
 
-tensorflow>=2.16,<2.21
-numpy>=1.26,<2.1
-pandas>=2.2,<2.3
-opencv-python-headless>=4.9,<5
-matplotlib>=3.8,<3.10
-scipy>=1.11,<1.15
-scikit-learn>=1.4,<1.6
-seaborn>=0.13,<0.14
-pillow>=10,<11
-ipykernel>=6.29,<7
-jupyter>=1.0,<2
+tensorflow[and-cuda]==2.21.0
+numpy==2.4.3
+pandas==3.0.2
+opencv-python-headless==4.13.0.92
+matplotlib==3.10.8
+scipy==1.17.1
+scikit-learn==1.8.0
+seaborn==0.13.2
+pillow==12.2.0
+ipykernel==7.2.0

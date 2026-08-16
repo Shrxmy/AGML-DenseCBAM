@@ -85,7 +85,7 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--freeze_backbone", action="store_true")
     parser.add_argument("--tmd_loss_weight", type=float, default=1.0)
-    parser.add_argument("--artifact_loss_weight", type=float, default=0.35)
+    parser.add_argument("--artifact_loss_weight", type=float, default=0.3)
     parser.add_argument("--fold_limit", type=int, default=None, help="Use 1 for smoke test; omit for all folds.")
     parser.add_argument("--skip_existing", action="store_true", help="Skip folds whose fold_N_results.csv already exists.")
     parser.add_argument("--skip_integrity_check", action="store_true", help="Debug only; never use for final thesis runs.")
@@ -104,6 +104,8 @@ def main() -> None:
     }
     isolated_config["folds"] = [fold_dir.name for fold_dir in fold_dirs]
     isolated_config["python_executable"] = sys.executable
+    isolated_config["training_script_sha256"] = sha256_file(script_path)
+    isolated_config["runner_script_sha256"] = sha256_file(Path(__file__).resolve())
     config_path = output_dir / "isolated_run_config.json"
     existing_results = [
         output_dir / f"{fold_dir.name}_results.csv"
@@ -131,6 +133,8 @@ def main() -> None:
             "class_weighting",
             "skip_integrity_check",
             "folds",
+            "training_script_sha256",
+            "runner_script_sha256",
         }
         mismatches = {
             key: (previous_config.get(key), isolated_config.get(key))
@@ -149,8 +153,11 @@ def main() -> None:
             expected_fingerprint = sha256_file(manifest_path) if manifest_path.exists() else None
             if (
                 "fold_manifest_sha256" not in existing
+                or "training_script_sha256" not in existing
                 or len(existing) != 1
                 or existing.iloc[0]["fold_manifest_sha256"] != expected_fingerprint
+                or existing.iloc[0]["training_script_sha256"]
+                != isolated_config["training_script_sha256"]
             ):
                 raise ValueError(
                     f"Cannot skip stale or unverifiable result {result_path}; rerun the fold."

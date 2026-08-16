@@ -22,7 +22,7 @@ from train_one_case_5fold import (
 
 TARGET_LAYERS = {
     "benchmark": "benchmark_fusion_conv",
-    "proposed": "cbam_refine_conv",
+    "proposed": "cbam_attention",
 }
 
 

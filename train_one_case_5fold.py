@@ -333,7 +333,7 @@ class TMJSequence(KerasSequence):
         return x, y_tmd
 
 
-@tf.keras.utils.register_keras_serializable(package="AGMTL")
+@tf.keras.utils.register_keras_serializable(package="AGML")
 class AttentionBlock(layers.Layer):
     def __init__(self, attention_type: str = "cbam", reduction_ratio: int = 16, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -416,7 +416,7 @@ def build_benchmark_model(config: RunConfig) -> Model:
     fused = layers.Concatenate(name="benchmark_fused_features")([conv5, pool3_proj])
     fused = layers.Conv2D(1024, 1, activation="relu", padding="same", name="benchmark_fusion_conv")(fused)
     x = layers.GlobalAveragePooling2D(name="benchmark_gap")(fused)
-    x = layers.Dense(512, activation="relu", kernel_regularizer=l2(config.l2_strength), name="benchmark_fc1")(x)
+    x = layers.Dense(1024, activation="relu", kernel_regularizer=l2(config.l2_strength), name="benchmark_fc1")(x)
     x = layers.Dropout(0.5, name="benchmark_dropout")(x)
     x = layers.BatchNormalization(name="benchmark_bn")(x)
     x = layers.Dense(128, activation="relu", name="benchmark_fc2")(x)
@@ -427,20 +427,44 @@ def build_benchmark_model(config: RunConfig) -> Model:
 def build_proposed_model(config: RunConfig) -> Model:
     backbone = make_backbone(config)
     conv5 = backbone.get_layer("conv5_block32_concat").output
-    x = AttentionBlock("cbam", name="cbam_attention")(conv5)
-    x = layers.Conv2D(1024, 1, activation="relu", padding="same", name="cbam_refine_conv")(x)
-    x = layers.GlobalAveragePooling2D(name="shared_gap")(x)
-    x = layers.Dense(512, activation="relu", kernel_regularizer=l2(config.l2_strength), name="shared_fc1")(x)
-    x = layers.Dropout(0.5, name="shared_dropout")(x)
-    x = layers.BatchNormalization(name="shared_bn")(x)
-    x = layers.Dense(128, activation="relu", name="shared_fc2")(x)
-    tmd_output = layers.Dense(len(TMD_LABELS), activation="softmax", dtype="float32", name="tmd_output")(x)
-    artifact_output = layers.Dense(len(ARTIFACT_LABELS), activation="softmax", dtype="float32", name="artifact_output")(x)
+    attended = AttentionBlock("cbam", name="cbam_attention")(conv5)
+    shared = layers.GlobalAveragePooling2D(name="shared_gap")(attended)
+
+    primary = layers.Dense(
+        1024,
+        activation="relu",
+        kernel_regularizer=l2(config.l2_strength),
+        name="tmd_fc1",
+    )(shared)
+    primary = layers.Dropout(0.5, name="tmd_dropout")(primary)
+    primary = layers.BatchNormalization(name="tmd_bn")(primary)
+    primary = layers.Dense(128, activation="relu", name="tmd_fc2")(primary)
+    tmd_output = layers.Dense(
+        len(TMD_LABELS),
+        activation="softmax",
+        dtype="float32",
+        name="tmd_output",
+    )(primary)
+
+    auxiliary = layers.Dense(
+        256,
+        activation="relu",
+        kernel_regularizer=l2(config.l2_strength),
+        name="artifact_fc1",
+    )(shared)
+    auxiliary = layers.Dropout(0.3, name="artifact_dropout")(auxiliary)
+    artifact_output = layers.Dense(
+        len(ARTIFACT_LABELS),
+        activation="softmax",
+        dtype="float32",
+        name="artifact_output",
+    )(auxiliary)
+
     # Explicit output mapping prevents metric/target ambiguity across Keras versions.
     return Model(
         backbone.input,
         {"tmd_output": tmd_output, "artifact_output": artifact_output},
-        name="AGMTL_DenseCBAM",
+        name="AGML_DenseCBAM",
     )
 
 
@@ -594,7 +618,7 @@ def run_one_fold(fold_root: Path, config: RunConfig) -> Tuple[pd.DataFrame, pd.D
     callbacks = [
         ModelCheckpoint(str(checkpoint_path), monitor=monitor, mode="min", save_best_only=True, verbose=1),
         EarlyStopping(monitor=monitor, mode="min", patience=5, restore_best_weights=True, verbose=1),
-        ReduceLROnPlateau(monitor=monitor, mode="min", factor=0.2, patience=3, min_lr=1e-6, verbose=1),
+        ReduceLROnPlateau(monitor=monitor, mode="min", factor=0.1, patience=3, min_lr=1e-6, verbose=1),
     ]
 
     history = model.fit(
@@ -661,6 +685,7 @@ def run_one_fold(fold_root: Path, config: RunConfig) -> Tuple[pd.DataFrame, pd.D
                 "precision_policy": mixed_precision.global_policy().name,
                 "class_weighting": config.class_weighting,
                 "fold_manifest_sha256": fold_manifest_sha256,
+                "training_script_sha256": sha256_file(Path(__file__).resolve()),
                 **per_artifact_metrics,
             }
         ]
@@ -732,6 +757,7 @@ def run_case(config: RunConfig) -> pd.DataFrame:
         serializable["tensorflow_version"] = tf.__version__
         serializable["gpu_devices"] = [device.name for device in tf.config.list_physical_devices("GPU")]
         serializable["precision_policy"] = mixed_precision.global_policy().name
+        serializable["training_script_sha256"] = sha256_file(Path(__file__).resolve())
         json.dump(serializable, f, indent=2)
 
     for fold_root in fold_dirs:
@@ -789,7 +815,7 @@ def parse_args() -> RunConfig:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--freeze_backbone", action="store_true")
     parser.add_argument("--tmd_loss_weight", type=float, default=1.0)
-    parser.add_argument("--artifact_loss_weight", type=float, default=0.35)
+    parser.add_argument("--artifact_loss_weight", type=float, default=0.3)
     parser.add_argument("--fold_limit", type=int, default=None, help="Use 1 for smoke test; omit for all folds.")
     parser.add_argument("--single_fold", type=str, default=None, help="Run only one named fold, e.g. fold_2. Used by isolated runner.")
     parser.add_argument(
