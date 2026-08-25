@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eo pipefail
 
 source /home/solyvie/environments/miniforge3/etc/profile.d/conda.sh
 conda activate thesis-env
