@@ -69,6 +69,13 @@ def load_cases(results_root: Path, expected_folds: int) -> pd.DataFrame:
             )
         if set(frame["model_type"]) != {model_type} or set(frame["scenario"]) != {scenario}:
             raise ValueError(f"Case labels inside {path} do not match its directory.")
+        if "evaluation_split" in frame and set(frame["evaluation_split"].dropna()) != {"test"}:
+            raise ValueError(
+                f"{path} contains development/validation predictions. "
+                "Chapter IV analysis requires evaluation_split='test'."
+            )
+        if "run_config_sha256" in frame and frame["run_config_sha256"].nunique() != 1:
+            raise ValueError(f"{path} mixes incompatible run-configuration fingerprints.")
         frame = frame.copy()
         frame["case"] = case_name
         frames.append(frame)

@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.metadata
 import json
+import platform
 import subprocess
 import sys
 from pathlib import Path
@@ -18,6 +20,11 @@ def sha256_file(path: Path, chunk_size: int = 1024 * 1024) -> str:
         for chunk in iter(lambda: handle.read(chunk_size), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def sha256_json(data: dict) -> str:
+    encoded = json.dumps(data, sort_keys=True, separators=(",", ":"), default=str).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
 
 
 def find_folds(folds_root: Path, fold_limit: int | None) -> List[Path]:
@@ -41,6 +48,25 @@ def combine_outputs(output_dir: Path, fold_names: List[str]) -> None:
     cm_files = [path for path in cm_files if path.exists()]
 
     combined = pd.concat([pd.read_csv(path) for path in result_files], ignore_index=True)
+    consistency_columns = [
+        "evaluation_split",
+        "run_config_sha256",
+        "training_script_sha256",
+        "tensorflow_version",
+        "precision_policy",
+    ]
+    missing_consistency = [column for column in consistency_columns if column not in combined]
+    if missing_consistency:
+        raise ValueError(f"Fold results lack required V3 provenance: {missing_consistency}")
+    inconsistent = {
+        column: combined[column].dropna().astype(str).unique().tolist()
+        for column in consistency_columns
+        if combined[column].dropna().astype(str).nunique() != 1
+    }
+    if inconsistent:
+        raise ValueError(
+            f"Cannot combine folds with inconsistent runtime/config provenance: {inconsistent}"
+        )
     combined.to_csv(output_dir / "all_fold_results.csv", index=False)
 
     metric_cols = ["accuracy", "precision", "recall", "specificity", "f1", "ece_10_bins", "images_per_second", "latency_ms", "epochs_ran"]
@@ -95,6 +121,18 @@ def main() -> None:
     parser.add_argument("--skip_integrity_check", action="store_true", help="Debug only; never use for final thesis runs.")
     parser.add_argument("--mixed_precision", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--class_weighting", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--conservative_augmentation", action="store_true")
+    parser.add_argument("--two_stage_fine_tuning", action="store_true")
+    parser.add_argument("--warmup_epochs", type=int, default=5)
+    parser.add_argument("--fine_tune_learning_rate", type=float, default=1e-5)
+    parser.add_argument("--fine_tune_from_layer", type=str, default="conv5_block1_0_bn")
+    parser.add_argument("--freeze_batch_norm", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument(
+        "--evaluation_split",
+        choices=["validation", "test"],
+        default="test",
+        help="Use validation only for development smoke tests; final runs must use test.",
+    )
     args = parser.parse_args()
 
     output_dir = args.output_dir or Path("chapter4_results") / f"{args.model_type}_{args.scenario}"
@@ -106,10 +144,21 @@ def main() -> None:
         key: str(value) if isinstance(value, Path) else value
         for key, value in vars(args).items()
     }
+    isolated_config["folds_root"] = str(args.folds_root.resolve())
+    isolated_config["output_dir"] = str(output_dir.resolve())
     isolated_config["folds"] = [fold_dir.name for fold_dir in fold_dirs]
     isolated_config["python_executable"] = sys.executable
+    isolated_config["python_version"] = platform.python_version()
+    try:
+        isolated_config["tensorflow_version"] = importlib.metadata.version("tensorflow")
+    except importlib.metadata.PackageNotFoundError:
+        isolated_config["tensorflow_version"] = "not-installed"
     isolated_config["training_script_sha256"] = sha256_file(script_path)
     isolated_config["runner_script_sha256"] = sha256_file(Path(__file__).resolve())
+    fingerprint_config = {
+        key: value for key, value in isolated_config.items() if key != "skip_existing"
+    }
+    isolated_config["run_config_sha256"] = sha256_json(fingerprint_config)
     config_path = output_dir / "isolated_run_config.json"
     existing_results = [
         output_dir / f"{fold_dir.name}_results.csv"
@@ -135,10 +184,21 @@ def main() -> None:
             "artifact_loss_weight",
             "mixed_precision",
             "class_weighting",
+            "conservative_augmentation",
+            "two_stage_fine_tuning",
+            "warmup_epochs",
+            "fine_tune_learning_rate",
+            "fine_tune_from_layer",
+            "freeze_batch_norm",
+            "evaluation_split",
             "skip_integrity_check",
             "folds",
             "training_script_sha256",
             "runner_script_sha256",
+            "python_executable",
+            "python_version",
+            "tensorflow_version",
+            "run_config_sha256",
         }
         mismatches = {
             key: (previous_config.get(key), isolated_config.get(key))
@@ -155,13 +215,26 @@ def main() -> None:
             existing = pd.read_csv(result_path)
             manifest_path = fold_dir / "manifest.csv"
             expected_fingerprint = sha256_file(manifest_path) if manifest_path.exists() else None
+            existing_fingerprint = (
+                existing.iloc[0]["fold_manifest_sha256"]
+                if "fold_manifest_sha256" in existing and len(existing) == 1
+                else None
+            )
+            manifest_matches = (
+                existing_fingerprint == expected_fingerprint
+                if expected_fingerprint is not None
+                else pd.isna(existing_fingerprint)
+            )
             if (
                 "fold_manifest_sha256" not in existing
                 or "training_script_sha256" not in existing
+                or "run_config_sha256" not in existing
                 or len(existing) != 1
-                or existing.iloc[0]["fold_manifest_sha256"] != expected_fingerprint
+                or not manifest_matches
                 or existing.iloc[0]["training_script_sha256"]
                 != isolated_config["training_script_sha256"]
+                or existing.iloc[0]["run_config_sha256"]
+                != isolated_config["run_config_sha256"]
             ):
                 raise ValueError(
                     f"Cannot skip stale or unverifiable result {result_path}; rerun the fold."
@@ -196,11 +269,27 @@ def main() -> None:
             str(args.tmd_loss_weight),
             "--artifact_loss_weight",
             str(args.artifact_loss_weight),
+            "--warmup_epochs",
+            str(args.warmup_epochs),
+            "--fine_tune_learning_rate",
+            str(args.fine_tune_learning_rate),
+            "--fine_tune_from_layer",
+            args.fine_tune_from_layer,
+            "--evaluation_split",
+            args.evaluation_split,
+            "--run_config_sha256",
+            isolated_config["run_config_sha256"],
             "--single_fold",
             fold_dir.name,
         ]
         if args.freeze_backbone:
             cmd.append("--freeze_backbone")
+        if args.conservative_augmentation:
+            cmd.append("--conservative_augmentation")
+        if args.two_stage_fine_tuning:
+            cmd.append("--two_stage_fine_tuning")
+        if not args.freeze_batch_norm:
+            cmd.append("--no-freeze_batch_norm")
         if args.skip_integrity_check:
             cmd.append("--skip_integrity_check")
         if not args.mixed_precision:

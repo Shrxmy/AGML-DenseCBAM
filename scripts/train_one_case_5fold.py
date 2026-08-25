@@ -32,6 +32,8 @@ TMD_LABELS = ["normal", "subluxation"]
 DISPLAY_LABELS = ["Normal", "Subluxation"]
 ARTIFACT_LABELS = ["none", "motion_blur", "gaussian_noise", "metal_streak"]
 ARTIFACT_PROTOCOL = "v2_moderate_pre_cbam_aux"
+TRAINING_PROTOCOL_V2 = "v2_single_stage_horizontal_flip"
+TRAINING_PROTOCOL_V3 = "v3_two_stage_conservative_augmentation"
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff"}
 
 
@@ -55,6 +57,14 @@ class RunConfig:
     verify_integrity: bool
     mixed_precision: bool
     class_weighting: bool
+    conservative_augmentation: bool = False
+    two_stage_fine_tuning: bool = False
+    warmup_epochs: int = 5
+    fine_tune_learning_rate: float = 1e-5
+    fine_tune_from_layer: str = "conv5_block1_0_bn"
+    freeze_batch_norm: bool = True
+    evaluation_split: str = "test"
+    run_config_sha256: str | None = None
 
 
 def seed_everything(seed: int) -> None:
@@ -86,6 +96,22 @@ def sha256_file(path: Path, chunk_size: int = 1024 * 1024) -> str:
         for chunk in iter(lambda: handle.read(chunk_size), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def sha256_json(data: Dict[str, object]) -> str:
+    encoded = json.dumps(data, sort_keys=True, separators=(",", ":"), default=str).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def effective_run_config_sha256(config: RunConfig) -> str:
+    if config.run_config_sha256:
+        return config.run_config_sha256
+    serializable = asdict(config)
+    serializable["folds_root"] = str(config.folds_root.resolve())
+    serializable["output_dir"] = str(config.output_dir.resolve())
+    serializable["image_size"] = list(config.image_size)
+    serializable["run_config_sha256"] = None
+    return sha256_json(serializable)
 
 
 def validate_split_integrity(df: pd.DataFrame) -> None:
@@ -258,6 +284,37 @@ def apply_artifact(
     raise ValueError(f"Unknown artifact label: {artifact_label}")
 
 
+def apply_conservative_augmentation(
+    image: np.ndarray,
+    rng: np.random.Generator,
+) -> np.ndarray:
+    """Apply deterministic, training-only V3 radiographic augmentation.
+
+    One affine resampling combines rotation (±5 degrees), translation (±3%),
+    and zoom (0.95-1.05). Contrast is adjusted by ±10% around the image mean.
+    Reflection padding avoids artificial black borders. Vertical flips are never
+    used because they are anatomically implausible for this task.
+    """
+    height, width = image.shape[:2]
+    angle = float(rng.uniform(-5.0, 5.0))
+    scale = float(rng.uniform(0.95, 1.05))
+    translate_x = float(rng.uniform(-0.03, 0.03) * width)
+    translate_y = float(rng.uniform(-0.03, 0.03) * height)
+    matrix = cv2.getRotationMatrix2D((width / 2.0, height / 2.0), angle, scale)
+    matrix[0, 2] += translate_x
+    matrix[1, 2] += translate_y
+    augmented = cv2.warpAffine(
+        image,
+        matrix,
+        (width, height),
+        flags=cv2.INTER_LINEAR,
+        borderMode=cv2.BORDER_REFLECT_101,
+    )
+    contrast = float(rng.uniform(0.9, 1.1))
+    mean = augmented.astype(np.float32).mean(axis=(0, 1), keepdims=True)
+    return ensure_uint8((augmented.astype(np.float32) - mean) * contrast + mean)
+
+
 def densenet_preprocess(image: np.ndarray) -> np.ndarray:
     """DenseNet ImageNet preprocessing (torch mode): [0, 255] -> [-1, 1]."""
     return image.astype(np.float32) / 127.5 - 1.0
@@ -274,6 +331,7 @@ class TMJSequence(KerasSequence):
         training: bool,
         seed: int,
         tmd_class_weights: Dict[int, float] | None = None,
+        conservative_augmentation: bool = False,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -285,6 +343,7 @@ class TMJSequence(KerasSequence):
         self.training = training
         self.seed = seed
         self.tmd_class_weights = tmd_class_weights
+        self.conservative_augmentation = conservative_augmentation
         self.shuffle_rng = np.random.default_rng(seed)
         self.indices = np.arange(len(self.df))
         self.epoch = -1
@@ -302,6 +361,14 @@ class TMJSequence(KerasSequence):
         sample_id = Path(filepath).name
         digest = hashlib.sha256(
             f"{self.seed}:{self.epoch}:{sample_id}".encode("utf-8")
+        ).digest()
+        return np.random.default_rng(int.from_bytes(digest[:8], "little"))
+
+    def _augmentation_rng(self, filepath: str) -> np.random.Generator:
+        """Independent V3 stream so V2 artifact assignments remain unchanged."""
+        sample_id = Path(filepath).name
+        digest = hashlib.sha256(
+            f"v3-augmentation:{self.seed}:{self.epoch}:{sample_id}".encode("utf-8")
         ).digest()
         return np.random.default_rng(int.from_bytes(digest[:8], "little"))
 
@@ -338,6 +405,11 @@ class TMJSequence(KerasSequence):
             item_rng = self._training_rng(row.filepath) if self.training else self._evaluation_rng(row.filepath)
             if self.training and item_rng.random() < 0.5:
                 image = cv2.flip(image, 1)
+            if self.training and self.conservative_augmentation:
+                image = apply_conservative_augmentation(
+                    image,
+                    self._augmentation_rng(row.filepath),
+                )
             artifact_label = self._artifact_for(item_rng)
             image = densenet_preprocess(apply_artifact(image, artifact_label, item_rng))
             images.append(image)
@@ -438,7 +510,7 @@ def make_backbone(config: RunConfig) -> Model:
         input_shape=(*config.image_size, 3),
         pooling=None,
     )
-    backbone.trainable = not config.freeze_backbone
+    backbone.trainable = not (config.freeze_backbone or config.two_stage_fine_tuning)
     return backbone
 
 
@@ -457,7 +529,9 @@ def build_benchmark_model(config: RunConfig) -> Model:
     x = layers.BatchNormalization(name="benchmark_bn")(x)
     x = layers.Dense(128, activation="relu", name="benchmark_fc2")(x)
     output = layers.Dense(len(TMD_LABELS), activation="softmax", dtype="float32", name="tmd_output")(x)
-    return Model(backbone.input, output, name="DenseNet201_Benchmark_SelfAttention")
+    model = Model(backbone.input, output, name="DenseNet201_Benchmark_SelfAttention")
+    model._agml_backbone_layer_names = tuple(layer.name for layer in backbone.layers)  # type: ignore[attr-defined]
+    return model
 
 
 def build_proposed_model(config: RunConfig) -> Model:
@@ -507,11 +581,13 @@ def build_proposed_model(config: RunConfig) -> Model:
     )(auxiliary)
 
     # Explicit output mapping prevents metric/target ambiguity across Keras versions.
-    return Model(
+    model = Model(
         backbone.input,
         {"tmd_output": tmd_output, "artifact_output": artifact_output},
         name="AGML_DenseCBAM",
     )
+    model._agml_backbone_layer_names = tuple(layer.name for layer in backbone.layers)  # type: ignore[attr-defined]
+    return model
 
 
 def compile_model(model: Model, config: RunConfig) -> None:
@@ -534,6 +610,207 @@ def compile_model(model: Model, config: RunConfig) -> None:
         metrics=[tf.keras.metrics.CategoricalAccuracy(name="accuracy")],
         jit_compile=False,
     )
+
+
+def _connected_backbone_layers(model: Model) -> List[layers.Layer]:
+    """Return only DenseNet layers connected to this task model, in backbone order."""
+    backbone_names = getattr(model, "_agml_backbone_layer_names", None)
+    if not backbone_names:
+        raise ValueError("Model is missing explicit DenseNet backbone metadata.")
+    model_layers = {layer.name: layer for layer in model.layers}
+    connected = [model_layers[name] for name in backbone_names if name in model_layers]
+    if not connected or connected[-1].name != "conv5_block32_concat":
+        raise ValueError("Connected DenseNet backbone does not end at conv5_block32_concat.")
+    return connected
+
+
+def validate_fine_tune_boundary(model: Model, config: RunConfig) -> None:
+    """Reject an invalid V3 boundary before spending time on warm-up training."""
+    names = [layer.name for layer in _connected_backbone_layers(model)]
+    if config.fine_tune_from_layer not in names:
+        raise ValueError(
+            f"Fine-tune boundary {config.fine_tune_from_layer!r} was not found "
+            "in the connected DenseNet201 backbone."
+        )
+
+
+def set_backbone_frozen(model: Model) -> None:
+    """Freeze only DenseNet layers while leaving all task-specific heads unchanged."""
+    for layer in _connected_backbone_layers(model):
+        layer.trainable = False
+
+
+def configure_selective_fine_tuning(model: Model, config: RunConfig) -> Dict[str, int]:
+    """Unfreeze the final DenseNet block without changing task-head trainability."""
+    if config.freeze_backbone:
+        raise ValueError("--freeze_backbone cannot be combined with two-stage fine-tuning.")
+    backbone_layers = _connected_backbone_layers(model)
+    names = [layer.name for layer in backbone_layers]
+    validate_fine_tune_boundary(model, config)
+    start = names.index(config.fine_tune_from_layer)
+
+    counts = {
+        "backbone_layers": len(backbone_layers),
+        "unfrozen_backbone_layers": 0,
+        "frozen_batch_norm_layers": 0,
+    }
+    for index, layer in enumerate(backbone_layers):
+        should_train = index >= start
+        if should_train and config.freeze_batch_norm and isinstance(layer, layers.BatchNormalization):
+            should_train = False
+            counts["frozen_batch_norm_layers"] += 1
+        layer.trainable = should_train
+        if should_train:
+            counts["unfrozen_backbone_layers"] += 1
+    return counts
+
+
+def _training_callbacks(
+    checkpoint_path: Path,
+    monitor: str,
+    save_weights_only: bool = False,
+    early_stopping: bool = True,
+) -> List[tf.keras.callbacks.Callback]:
+    callbacks: List[tf.keras.callbacks.Callback] = [
+        ModelCheckpoint(
+            str(checkpoint_path),
+            monitor=monitor,
+            mode="min",
+            save_best_only=True,
+            save_weights_only=save_weights_only,
+            verbose=1,
+        )
+    ]
+    if early_stopping:
+        callbacks.extend(
+            [
+                EarlyStopping(
+                    monitor=monitor,
+                    mode="min",
+                    patience=5,
+                    restore_best_weights=True,
+                    verbose=1,
+                ),
+                ReduceLROnPlateau(
+                    monitor=monitor,
+                    mode="min",
+                    factor=0.1,
+                    patience=3,
+                    min_lr=1e-6,
+                    verbose=1,
+                ),
+            ]
+        )
+    return callbacks
+
+
+def fit_model(
+    model: Model,
+    train_gen: TMJSequence,
+    val_gen: TMJSequence,
+    config: RunConfig,
+    checkpoint_path: Path,
+) -> Tuple[pd.DataFrame, Dict[str, object]]:
+    """Fit using either the preserved V2 schedule or locked two-stage V3 schedule."""
+    monitor = "val_tmd_output_loss" if config.model_type == "proposed" else "val_loss"
+    if not config.two_stage_fine_tuning:
+        history = model.fit(
+            train_gen,
+            epochs=config.epochs,
+            validation_data=val_gen,
+            verbose=1,
+            callbacks=_training_callbacks(checkpoint_path, monitor),
+        )
+        history_df = pd.DataFrame(history.history)
+        return history_df, {
+            "selected_stage": "single_stage",
+            "stage1_epochs_ran": 0,
+            "stage2_epochs_ran": len(history_df),
+            "fine_tuning": None,
+        }
+
+    if not 1 <= config.warmup_epochs < config.epochs:
+        raise ValueError("Two-stage training requires 1 <= warmup_epochs < total epochs.")
+    validate_fine_tune_boundary(model, config)
+
+    stage1_path = checkpoint_path.with_name(checkpoint_path.stem + "_stage1.weights.h5")
+    stage2_path = checkpoint_path.with_name(checkpoint_path.stem + "_stage2.weights.h5")
+    print(f"V3 stage 1: frozen DenseNet201 warm-up for {config.warmup_epochs} epochs.")
+    stage1_history = model.fit(
+        train_gen,
+        epochs=config.warmup_epochs,
+        validation_data=val_gen,
+        verbose=1,
+        callbacks=_training_callbacks(
+            stage1_path,
+            monitor,
+            save_weights_only=True,
+            early_stopping=False,
+        ),
+    )
+    stage1_df = pd.DataFrame(stage1_history.history)
+    if "learning_rate" not in stage1_df:
+        stage1_df["learning_rate"] = config.learning_rate
+    stage1_df.insert(0, "stage_epoch", np.arange(1, len(stage1_df) + 1))
+    stage1_df.insert(0, "training_stage", "frozen_warmup")
+
+    # Stage 2 must begin from the best warm-up checkpoint, not merely the final
+    # warm-up epoch, because validation loss can worsen before epoch 5.
+    model.load_weights(stage1_path)
+    fine_tuning = configure_selective_fine_tuning(model, config)
+    print("V3 stage 2 trainability:", fine_tuning)
+    stage2_config = RunConfig(
+        **{
+            **asdict(config),
+            "learning_rate": config.fine_tune_learning_rate,
+        }
+    )
+    compile_model(model, stage2_config)
+    print(
+        f"V3 stage 2: fine-tuning from {config.fine_tune_from_layer} at "
+        f"learning rate {config.fine_tune_learning_rate:g}."
+    )
+    stage2_history = model.fit(
+        train_gen,
+        initial_epoch=config.warmup_epochs,
+        epochs=config.epochs,
+        validation_data=val_gen,
+        verbose=1,
+        callbacks=_training_callbacks(
+            stage2_path,
+            monitor,
+            save_weights_only=True,
+            early_stopping=True,
+        ),
+    )
+    stage2_df = pd.DataFrame(stage2_history.history)
+    if "learning_rate" not in stage2_df:
+        stage2_df["learning_rate"] = config.fine_tune_learning_rate
+    stage2_df.insert(0, "stage_epoch", np.arange(1, len(stage2_df) + 1))
+    stage2_df.insert(0, "training_stage", "selective_fine_tuning")
+
+    stage1_best = float(stage1_df[monitor].min())
+    stage2_best = float(stage2_df[monitor].min())
+    selected_stage = "frozen_warmup" if stage1_best <= stage2_best else "selective_fine_tuning"
+    selected_path = stage1_path if selected_stage == "frozen_warmup" else stage2_path
+    if selected_stage == "frozen_warmup":
+        set_backbone_frozen(model)
+        compile_model(model, config)
+    model.load_weights(selected_path)
+    model.save(checkpoint_path)
+    stage1_path.unlink(missing_ok=True)
+    stage2_path.unlink(missing_ok=True)
+
+    history_df = pd.concat([stage1_df, stage2_df], ignore_index=True)
+    return history_df, {
+        "selected_stage": selected_stage,
+        "stage1_epochs_ran": len(stage1_df),
+        "stage2_epochs_ran": len(stage2_df),
+        "stage1_best_validation_loss": stage1_best,
+        "stage2_best_validation_loss": stage2_best,
+        "fine_tuning": fine_tuning,
+        "checkpoint_purpose": "inference_and_gradcam",
+    }
 
 
 def unpack_batch(batch):
@@ -636,7 +913,9 @@ def run_one_fold(fold_root: Path, config: RunConfig) -> Tuple[pd.DataFrame, pd.D
     train_df = df[df["split"] == "train"].reset_index(drop=True)
     val_df = df[df["split"] == "validation"].reset_index(drop=True)
     test_df = df[df["split"] == "test"].reset_index(drop=True)
+    evaluation_df = val_df if config.evaluation_split == "validation" else test_df
     print(df.groupby(["split", "class_name"]).size())
+    print(f"Evaluation split: {config.evaluation_split} ({len(evaluation_df)} images)")
 
     multi_task = config.model_type == "proposed"
     class_weights = balanced_class_weights(train_df["tmd_label"]) if config.class_weighting else None
@@ -650,9 +929,26 @@ def run_one_fold(fold_root: Path, config: RunConfig) -> Tuple[pd.DataFrame, pd.D
         True,
         config.random_state,
         tmd_class_weights=class_weights,
+        conservative_augmentation=config.conservative_augmentation,
     )
-    val_gen = TMJSequence(val_df, config.image_size, config.batch_size, multi_task, config.scenario, False, config.random_state)
-    test_gen = TMJSequence(test_df, config.image_size, config.batch_size, multi_task, config.scenario, False, config.random_state)
+    val_gen = TMJSequence(
+        val_df,
+        config.image_size,
+        config.batch_size,
+        multi_task,
+        config.scenario,
+        False,
+        config.random_state,
+    )
+    evaluation_gen = TMJSequence(
+        evaluation_df,
+        config.image_size,
+        config.batch_size,
+        multi_task,
+        config.scenario,
+        False,
+        config.random_state,
+    )
 
     model = build_proposed_model(config) if multi_task else build_benchmark_model(config)
     compile_model(model, config)
@@ -660,23 +956,16 @@ def run_one_fold(fold_root: Path, config: RunConfig) -> Tuple[pd.DataFrame, pd.D
     case_dir = config.output_dir
     case_dir.mkdir(parents=True, exist_ok=True)
     checkpoint_path = case_dir / f"{fold_root.name}_{config.model_type}_{config.scenario}_best.keras"
-    monitor = "val_tmd_output_loss" if multi_task else "val_loss"
-    callbacks = [
-        ModelCheckpoint(str(checkpoint_path), monitor=monitor, mode="min", save_best_only=True, verbose=1),
-        EarlyStopping(monitor=monitor, mode="min", patience=5, restore_best_weights=True, verbose=1),
-        ReduceLROnPlateau(monitor=monitor, mode="min", factor=0.1, patience=3, min_lr=1e-6, verbose=1),
-    ]
-
-    history = model.fit(
+    history_df, training_metadata = fit_model(
+        model,
         train_gen,
-        epochs=config.epochs,
-        validation_data=val_gen,
-        verbose=1,
-        callbacks=callbacks,
+        val_gen,
+        config,
+        checkpoint_path,
     )
 
     # Warm up graph tracing before measuring end-to-end batch inference.
-    warmup_x, _ = unpack_batch(test_gen[0])
+    warmup_x, _ = unpack_batch(evaluation_gen[0])
     _ = model(warmup_x, training=False)
     start = time.perf_counter()
     (
@@ -687,7 +976,7 @@ def run_one_fold(fold_root: Path, config: RunConfig) -> Tuple[pd.DataFrame, pd.D
         artifact_pred,
         artifact_conf,
         prediction_paths,
-    ) = collect_predictions(model, test_gen, multi_task)
+    ) = collect_predictions(model, evaluation_gen, multi_task)
     elapsed = time.perf_counter() - start
     images_per_second = len(y_true) / max(elapsed, 1e-8)
     latency_ms = 1000.0 / max(images_per_second, 1e-8)
@@ -742,13 +1031,37 @@ def run_one_fold(fold_root: Path, config: RunConfig) -> Tuple[pd.DataFrame, pd.D
                 "tp": int(tp),
                 "images_per_second": images_per_second,
                 "latency_ms": latency_ms,
-                "epochs_ran": len(history.history.get("loss", [])),
+                "epochs_ran": len(history_df),
+                "evaluation_split": config.evaluation_split,
+                "training_protocol": (
+                    TRAINING_PROTOCOL_V3
+                    if config.two_stage_fine_tuning and config.conservative_augmentation
+                    else TRAINING_PROTOCOL_V2
+                ),
+                "conservative_augmentation": config.conservative_augmentation,
+                "two_stage_fine_tuning": config.two_stage_fine_tuning,
+                "selected_stage": training_metadata["selected_stage"],
+                "stage1_epochs_ran": training_metadata["stage1_epochs_ran"],
+                "stage2_epochs_ran": training_metadata["stage2_epochs_ran"],
+                "stage1_best_validation_loss": training_metadata.get(
+                    "stage1_best_validation_loss", np.nan
+                ),
+                "stage2_best_validation_loss": training_metadata.get(
+                    "stage2_best_validation_loss", np.nan
+                ),
+                "unfrozen_backbone_layers": (
+                    training_metadata.get("fine_tuning") or {}
+                ).get("unfrozen_backbone_layers", 0),
+                "frozen_backbone_batch_norm_layers": (
+                    training_metadata.get("fine_tuning") or {}
+                ).get("frozen_batch_norm_layers", 0),
                 "tensorflow_version": tf.__version__,
                 "precision_policy": mixed_precision.global_policy().name,
                 "artifact_protocol": ARTIFACT_PROTOCOL,
                 "class_weighting": config.class_weighting,
                 "fold_manifest_sha256": fold_manifest_sha256,
                 "training_script_sha256": sha256_file(Path(__file__).resolve()),
+                "run_config_sha256": effective_run_config_sha256(config),
                 **per_artifact_metrics,
             }
         ]
@@ -769,7 +1082,6 @@ def run_one_fold(fold_root: Path, config: RunConfig) -> Tuple[pd.DataFrame, pd.D
             }
         )
     pred_df = pd.DataFrame(pred_data)
-    history_df = pd.DataFrame(history.history)
 
     result_df.to_csv(case_dir / f"{fold_root.name}_results.csv", index=False)
     cm_df.to_csv(case_dir / f"{fold_root.name}_confusion_matrix.csv")
@@ -801,6 +1113,15 @@ def run_case(config: RunConfig) -> pd.DataFrame:
         raise ValueError("model_type must be 'benchmark' or 'proposed'")
     if config.scenario not in {"clean", "artifact_mix"}:
         raise ValueError("scenario must be 'clean' or 'artifact_mix'")
+    if config.evaluation_split not in {"validation", "test"}:
+        raise ValueError("evaluation_split must be 'validation' or 'test'")
+    if config.freeze_backbone and config.two_stage_fine_tuning:
+        raise ValueError("--freeze_backbone cannot be combined with two-stage fine-tuning.")
+    if config.conservative_augmentation != config.two_stage_fine_tuning:
+        raise ValueError(
+            "Locked V3 requires --conservative_augmentation and "
+            "--two_stage_fine_tuning together."
+        )
 
     fold_dirs = sorted(
         [p for p in config.folds_root.iterdir() if p.is_dir() and p.name.startswith("fold_")],
@@ -832,7 +1153,13 @@ def run_case(config: RunConfig) -> pd.DataFrame:
         serializable["gpu_devices"] = [device.name for device in tf.config.list_physical_devices("GPU")]
         serializable["precision_policy"] = mixed_precision.global_policy().name
         serializable["artifact_protocol"] = ARTIFACT_PROTOCOL
+        serializable["training_protocol"] = (
+            TRAINING_PROTOCOL_V3
+            if config.two_stage_fine_tuning
+            else TRAINING_PROTOCOL_V2
+        )
         serializable["training_script_sha256"] = sha256_file(Path(__file__).resolve())
+        serializable["effective_run_config_sha256"] = effective_run_config_sha256(config)
         json.dump(serializable, f, indent=2)
 
     for fold_root in fold_dirs:
@@ -913,6 +1240,37 @@ def parse_args() -> RunConfig:
         default=True,
         help="Apply balanced TMD sample weights to the training loss.",
     )
+    parser.add_argument(
+        "--conservative_augmentation",
+        action="store_true",
+        help="Enable locked V3 training-only affine and contrast augmentation.",
+    )
+    parser.add_argument(
+        "--two_stage_fine_tuning",
+        action="store_true",
+        help="Enable frozen warm-up followed by selective final-block fine-tuning.",
+    )
+    parser.add_argument("--warmup_epochs", type=int, default=5)
+    parser.add_argument("--fine_tune_learning_rate", type=float, default=1e-5)
+    parser.add_argument("--fine_tune_from_layer", type=str, default="conv5_block1_0_bn")
+    parser.add_argument(
+        "--freeze_batch_norm",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Keep DenseNet BatchNorm statistics frozen during selective fine-tuning.",
+    )
+    parser.add_argument(
+        "--evaluation_split",
+        choices=["validation", "test"],
+        default="test",
+        help="Use validation for development smoke tests; final runs must use test.",
+    )
+    parser.add_argument(
+        "--run_config_sha256",
+        type=str,
+        default=None,
+        help="Canonical isolated-run fingerprint supplied by the runner.",
+    )
     args = parser.parse_args()
 
     output_dir = args.output_dir or Path("chapter4_results") / f"{args.model_type}_{args.scenario}"
@@ -935,6 +1293,14 @@ def parse_args() -> RunConfig:
         verify_integrity=not args.skip_integrity_check,
         mixed_precision=args.mixed_precision,
         class_weighting=args.class_weighting,
+        conservative_augmentation=args.conservative_augmentation,
+        two_stage_fine_tuning=args.two_stage_fine_tuning,
+        warmup_epochs=args.warmup_epochs,
+        fine_tune_learning_rate=args.fine_tune_learning_rate,
+        fine_tune_from_layer=args.fine_tune_from_layer,
+        freeze_batch_norm=args.freeze_batch_norm,
+        evaluation_split=args.evaluation_split,
+        run_config_sha256=args.run_config_sha256,
     )
 
 
