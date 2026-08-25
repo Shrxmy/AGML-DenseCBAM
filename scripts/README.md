@@ -7,7 +7,8 @@
 - `analyze_chapter4.py` — aggregates C1–C4 results and paired analyses.
 - `generate_gradcam.py` — creates Grad-CAM outputs and optional ROI metrics.
 - `check_tf_gpu.py` — verifies TensorFlow GPU availability.
-- `run_v3_development_smoke.sh` — launches the locked Fold 1 V3 validation-only smoke run in WSL.
+- `run_v3_development_smoke.sh` — launches the abbreviated Fold 1 V3 validation-only functionality smoke in WSL.
+- `run_v3_development_full_schedule.sh` — runs the locked 5+45-epoch V3 schedule on Fold 1 validation data without touching the outer test split.
 
 Invoke commands from the repository root, for example:
 
