@@ -171,29 +171,29 @@ Under the artifact-mix condition, the proposed model had approximately 36.2% low
 - Selected test: paired t-test for all reported comparisons
 - Effect size: Cohen's `dz`
 
-Because there are only five folds, Shapiro–Wilk tests and inferential p-values have low power. The reported tests are **one-tailed and unadjusted**. If all five metrics within a condition are treated as one multiple-testing family, a conservative Bonferroni threshold would be 0.01; neither artifact-condition p-value would cross that stricter threshold. The significant findings below therefore apply to the prespecified unadjusted analysis and should not be generalized to every metric.
+Every Shapiro–Wilk p-value was greater than 0.05, so the analysis selected the paired t-test under its prespecified decision rule. This does not prove normality: because there are only five paired folds, Shapiro–Wilk tests and inferential p-values have low power. The reported tests are **one-tailed and unadjusted**. If all five metrics within a condition are treated as one multiple-testing family, a conservative Bonferroni threshold would be 0.01; neither artifact-condition p-value would cross that stricter threshold. The significant findings below therefore apply to the prespecified unadjusted analysis and should not be generalized to every metric.
 
 ### 8.2 Clean condition: C3 proposed versus C1 benchmark
 
-| Metric | Mean difference | t statistic | One-tailed p | Cohen's dz | Significant at 0.05? |
-|---|---:|---:|---:|---:|---|
-| Accuracy | +0.23 points | 0.243 | 0.4100 | 0.109 | No |
-| Precision | −0.05 points | −0.049 | 0.5184 | −0.022 | No |
-| Recall | +0.43 points | 0.319 | 0.3829 | 0.143 | No |
-| Specificity | −0.003 points | −0.003 | 0.5010 | −0.001 | No |
-| F1-score | +0.22 points | 0.241 | 0.4108 | 0.108 | No |
+| Metric | Shapiro W | Shapiro p | Mean difference | t statistic | One-tailed p | Cohen's dz | Significant at 0.05? |
+|---|---:|---:|---:|---:|---:|---:|---|
+| Accuracy | 0.8853 | 0.3341 | +0.23 points | 0.243 | 0.4100 | 0.109 | No |
+| Precision | 0.8310 | 0.1416 | −0.05 points | −0.049 | 0.5184 | −0.022 | No |
+| Recall | 0.8693 | 0.2637 | +0.43 points | 0.319 | 0.3829 | 0.143 | No |
+| Specificity | 0.8938 | 0.3765 | −0.003 points | −0.003 | 0.5010 | −0.001 | No |
+| F1-score | 0.8536 | 0.2062 | +0.22 points | 0.241 | 0.4108 | 0.108 | No |
 
 **Interpretation:** V2 provides no statistically significant evidence that the proposed model improves clean-condition performance over the reconstructed benchmark.
 
 ### 8.3 Artifact-mix condition: C4 proposed versus C2 benchmark
 
-| Metric | Mean difference | t statistic | One-tailed p | Cohen's dz | Significant at 0.05? |
-|---|---:|---:|---:|---:|---|
-| Accuracy | **+1.33 points** | 3.613 | **0.0112** | **1.616** | **Yes** |
-| Precision | +0.90 points | 1.301 | 0.1315 | 0.582 | No |
-| Recall | +1.58 points | 1.603 | 0.0921 | 0.717 | No |
-| Specificity | +1.03 points | 1.071 | 0.1722 | 0.479 | No |
-| F1-score | **+1.26 points** | 3.396 | **0.0137** | **1.519** | **Yes** |
+| Metric | Shapiro W | Shapiro p | Mean difference | t statistic | One-tailed p | Cohen's dz | Significant at 0.05? |
+|---|---:|---:|---:|---:|---:|---:|---|
+| Accuracy | 0.9535 | 0.7619 | **+1.33 points** | 3.613 | **0.0112** | **1.616** | **Yes** |
+| Precision | 0.9861 | 0.9645 | +0.90 points | 1.301 | 0.1315 | 0.582 | No |
+| Recall | 0.9160 | 0.5042 | +1.58 points | 1.603 | 0.0921 | 0.717 | No |
+| Specificity | 0.9834 | 0.9517 | +1.03 points | 1.071 | 0.1722 | 0.479 | No |
+| F1-score | 0.9036 | 0.4300 | **+1.26 points** | 3.396 | **0.0137** | **1.519** | **Yes** |
 
 **Interpretation:** Under the prespecified unadjusted one-tailed analysis, the proposed model significantly outperformed the benchmark in artifact-mix **accuracy and F1-score**, with large paired standardized effects. Precision, recall, and specificity were not individually significant.
 
@@ -201,13 +201,13 @@ Because there are only five folds, Shapiro–Wilk tests and inferential p-values
 
 A degradation value is clean performance minus artifact-mix performance. A negative degradation means the artifact-mix score was higher than the clean score. The robustness-gain difference is benchmark degradation minus proposed degradation; positive values favor the proposed model.
 
-| Metric | Benchmark mean degradation | Proposed mean degradation | Robustness-gain difference | One-tailed p | Cohen's dz | Significant? |
-|---|---:|---:|---:|---:|---:|---|
-| Accuracy | +0.27 points | −0.83 points | +1.10 points | 0.1180 | 0.623 | No |
-| Precision | +0.98 points | +0.03 points | +0.95 points | 0.2918 | 0.266 | No |
-| Recall | −0.61 points | −1.77 points | +1.16 points | 0.1101 | 0.649 | No |
-| Specificity | +1.33 points | +0.29 points | +1.04 points | 0.3208 | 0.225 | No |
-| F1-score | +0.18 points | −0.86 points | +1.04 points | 0.0967 | 0.698 | No |
+| Metric | Shapiro W | Shapiro p | Benchmark mean degradation | Proposed mean degradation | Robustness-gain difference | One-tailed p | Cohen's dz | Significant? |
+|---|---:|---:|---:|---:|---:|---:|---:|---|
+| Accuracy | 0.9279 | 0.5824 | +0.27 points | −0.83 points | +1.10 points | 0.1180 | 0.623 | No |
+| Precision | 0.9001 | 0.4107 | +0.98 points | +0.03 points | +0.95 points | 0.2918 | 0.266 | No |
+| Recall | 0.8938 | 0.3767 | −0.61 points | −1.77 points | +1.16 points | 0.1101 | 0.649 | No |
+| Specificity | 0.8788 | 0.3041 | +1.33 points | +0.29 points | +1.04 points | 0.3208 | 0.225 | No |
+| F1-score | 0.9173 | 0.5128 | +0.18 points | −0.86 points | +1.04 points | 0.0967 | 0.698 | No |
 
 **Interpretation:** The proposed model did not show average accuracy or F1 degradation under artifact mix, whereas the benchmark showed small decreases. However, the separate paired robustness-gain tests did not reach `p < 0.05`; robustness superiority should therefore be described as a favorable descriptive trend rather than a statistically significant finding.
 
