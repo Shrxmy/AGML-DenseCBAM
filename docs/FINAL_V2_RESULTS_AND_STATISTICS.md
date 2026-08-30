@@ -228,7 +228,20 @@ The principal corrective outcome was recovery of C4 TMD performance and removal 
 
 > Across five matched image-wise folds, the proposed AGML-DenseCBAM V2 model achieved 90.27% ± 1.44% accuracy and 91.15% ± 1.26% F1-score under the controlled artifact-mix condition, compared with 88.94% ± 1.00% accuracy and 89.89% ± 1.00% F1-score for the reconstructed DenseNet201 attention benchmark. Prespecified unadjusted one-tailed paired t-tests indicated significant improvements in artifact-condition accuracy (`p = 0.0112`, Cohen's `dz = 1.616`) and F1-score (`p = 0.0137`, Cohen's `dz = 1.519`). Clean-condition differences and the separate robustness-gain comparisons were not statistically significant. Consequently, the findings support a qualified artifact-condition advantage in accuracy and F1-score, but not superiority across all metrics. Interpretation remains limited by the five-fold sample size, image-wise rather than patient-wise splitting, absence of original provenance identifiers, and use of controlled synthetic rather than clinically validated artifacts.
 
-## 12. Source files
+## 12. Generated appendix artifacts
+
+The completed V2 histories and checkpoints were used to generate the following appendix-ready outputs without retraining or changing any V2 prediction:
+
+| Artifact | Quantity | Location |
+|---|---:|---|
+| Fold learning-curve figures | 20 | `chapter4_results/final_v2/<case>/fold_N_learning_curves.png` |
+| Individual Grad-CAM model/sample panels | 40 | `chapter4_results/final_v2/gradcam_appendix/<scenario>/<fold>/` |
+| Paired benchmark/proposed Grad-CAM comparisons | 20 | `chapter4_results/final_v2/gradcam_appendix/comparisons/` |
+| Grad-CAM provenance and prediction metadata | 40 rows | `chapter4_results/final_v2/gradcam_appendix/gradcam_appendix_metadata.csv` |
+
+Samples for Grad-CAM were selected by a deterministic balanced stable-hash rule independent of model predictions or heatmap appearance. See [`GRADCAM_APPENDIX_GUIDE.md`](GRADCAM_APPENDIX_GUIDE.md) for limitations and recommended captions.
+
+## 13. Source files
 
 The values in this document were taken from:
 

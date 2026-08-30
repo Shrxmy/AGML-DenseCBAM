@@ -490,17 +490,17 @@ class AttentionBlock(layers.Layer):
             attention_weights = tf.nn.softmax(attention_scores, axis=-1)
             attended = tf.matmul(attention_weights, v)
             attended = tf.reshape(attended, [batch_size, height, width, channels])
-            return inputs + attended
+            return inputs + tf.cast(attended, inputs.dtype)
 
         avg_descriptor = self.shared_dense_2(self.shared_dense_1(self.avg_pool(inputs)))
         max_descriptor = self.shared_dense_2(self.shared_dense_1(self.max_pool(inputs)))
         channel_attention = tf.nn.sigmoid(avg_descriptor + max_descriptor)
         channel_attention = tf.reshape(channel_attention, (-1, 1, 1, inputs.shape[-1]))
-        x = inputs * channel_attention
+        x = inputs * tf.cast(channel_attention, inputs.dtype)
         avg_map = tf.reduce_mean(x, axis=-1, keepdims=True)
         max_map = tf.reduce_max(x, axis=-1, keepdims=True)
         spatial_attention = self.spatial_conv(tf.concat([avg_map, max_map], axis=-1))
-        return x * spatial_attention
+        return x * tf.cast(spatial_attention, x.dtype)
 
 
 def make_backbone(config: RunConfig) -> Model:
@@ -813,6 +813,95 @@ def fit_model(
     }
 
 
+def save_learning_curves(
+    history_df: pd.DataFrame,
+    model_type: str,
+    output_path: Path,
+    title: str,
+) -> None:
+    """Save appendix-ready training/validation loss curves for one fold."""
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from matplotlib.ticker import MaxNLocator
+
+    panels = [("loss", "val_loss", "Total training objective")]
+    if model_type == "proposed":
+        panels.extend(
+            [
+                ("tmd_output_loss", "val_tmd_output_loss", "Primary TMD loss"),
+                (
+                    "artifact_output_loss",
+                    "val_artifact_output_loss",
+                    "Auxiliary artifact loss",
+                ),
+            ]
+        )
+    panels = [panel for panel in panels if panel[0] in history_df and panel[1] in history_df]
+    if not panels:
+        raise ValueError("History does not contain a training/validation loss pair.")
+
+    epochs = np.arange(1, len(history_df) + 1)
+    figure, axes = plt.subplots(1, len(panels), figsize=(6.2 * len(panels), 4.8), squeeze=False)
+    stage_boundary = None
+    if "training_stage" in history_df:
+        fine_tuning_rows = np.flatnonzero(
+            history_df["training_stage"].astype(str).to_numpy() == "selective_fine_tuning"
+        )
+        if len(fine_tuning_rows):
+            stage_boundary = float(fine_tuning_rows[0]) + 0.5
+
+    for axis, (training_column, validation_column, panel_title) in zip(axes[0], panels):
+        axis.plot(
+            epochs,
+            history_df[training_column].astype(float),
+            marker="o",
+            markersize=3,
+            linewidth=1.8,
+            label="Training loss",
+            color="#1f77b4",
+        )
+        axis.plot(
+            epochs,
+            history_df[validation_column].astype(float),
+            marker="s",
+            markersize=3,
+            linewidth=1.8,
+            label="Validation loss",
+            color="#d62728",
+        )
+        if stage_boundary is not None:
+            axis.axvline(
+                stage_boundary,
+                color="#555555",
+                linestyle="--",
+                linewidth=1.2,
+                label="Selective fine-tuning begins",
+            )
+        axis.set_title(panel_title)
+        axis.set_xlabel("Epoch")
+        axis.set_ylabel("Loss")
+        axis.set_ylim(bottom=0)
+        axis.xaxis.set_major_locator(MaxNLocator(integer=True))
+        axis.grid(alpha=0.25)
+        axis.legend(frameon=False)
+
+    figure.suptitle(title, fontsize=13, fontweight="bold")
+    figure.text(
+        0.5,
+        0.01,
+        "Training TMD loss uses balanced class sample weights; validation TMD loss is unweighted.",
+        ha="center",
+        fontsize=9,
+        color="#444444",
+    )
+    figure.tight_layout(rect=(0, 0.04, 1, 0.95))
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    figure.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.close(figure)
+
+
 def unpack_batch(batch):
     """Return inputs and targets from a Keras batch with optional sample weights."""
     if len(batch) == 3:
@@ -963,6 +1052,13 @@ def run_one_fold(fold_root: Path, config: RunConfig) -> Tuple[pd.DataFrame, pd.D
         config,
         checkpoint_path,
     )
+    learning_curve_path = case_dir / f"{fold_root.name}_learning_curves.png"
+    save_learning_curves(
+        history_df,
+        config.model_type,
+        learning_curve_path,
+        title=f"{fold_root.name.replace('_', ' ').title()} — {config.model_type.title()} / {config.scenario}",
+    )
 
     # Warm up graph tracing before measuring end-to-end batch inference.
     warmup_x, _ = unpack_batch(evaluation_gen[0])
@@ -1031,6 +1127,7 @@ def run_one_fold(fold_root: Path, config: RunConfig) -> Tuple[pd.DataFrame, pd.D
                 "tp": int(tp),
                 "images_per_second": images_per_second,
                 "latency_ms": latency_ms,
+                "learning_curve_png": str(learning_curve_path),
                 "epochs_ran": len(history_df),
                 "evaluation_split": config.evaluation_split,
                 "training_protocol": (
