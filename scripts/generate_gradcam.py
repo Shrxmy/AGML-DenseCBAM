@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Generate Grad-CAM and optional ROI localization metrics for one final checkpoint."""
+# Generate Grad-CAM outputs for one final checkpoint.
 from __future__ import annotations
 
 import argparse
@@ -32,6 +32,38 @@ TARGET_LAYERS = {
     "benchmark": "benchmark_fusion_conv",
     "proposed": "cbam_attention",
 }
+
+
+def configure_checkpoint_precision(checkpoint: Path, requested_policy: str = "auto") -> str:
+    # Restore the recorded checkpoint precision.
+    if requested_policy != "auto":
+        policy = requested_policy
+    else:
+        run_config_path = checkpoint.parent / "run_config.json"
+        if not run_config_path.exists():
+            raise FileNotFoundError(
+                f"Cannot infer checkpoint precision without {run_config_path}. "
+                "Pass --precision_policy explicitly for a legacy checkpoint."
+            )
+        config = json.loads(run_config_path.read_text(encoding="utf-8"))
+        policy = str(config.get("precision_policy") or "")
+        if policy not in {"float32", "mixed_float16", "mixed_bfloat16"}:
+            raise ValueError(f"Unsupported or missing precision_policy in {run_config_path}: {policy!r}")
+    tf.keras.mixed_precision.set_global_policy(policy)
+    return policy
+
+
+def load_checkpoint(
+    checkpoint: Path,
+    requested_policy: str = "auto",
+) -> Tuple[tf.keras.Model, str]:
+    policy = configure_checkpoint_precision(checkpoint, requested_policy)
+    model = tf.keras.models.load_model(
+        checkpoint,
+        custom_objects={"AttentionBlock": AttentionBlock},
+        compile=False,
+    )
+    return model, policy
 
 
 def load_input(
@@ -84,7 +116,11 @@ def gradcam(
     heatmap = tf.maximum(heatmap, 0)
     maximum = tf.reduce_max(heatmap)
     heatmap = tf.where(maximum > 0, heatmap / maximum, heatmap)
-    return np.asarray(heatmap), np.asarray(probabilities[0]), class_index
+    return (
+        np.asarray(heatmap, dtype=np.float32),
+        np.asarray(probabilities[0], dtype=np.float32),
+        class_index,
+    )
 
 
 def overlay_heatmap(display_rgb: np.ndarray, heatmap: np.ndarray, alpha: float) -> np.ndarray:
@@ -92,6 +128,48 @@ def overlay_heatmap(display_rgb: np.ndarray, heatmap: np.ndarray, alpha: float) 
     colored_bgr = cv2.applyColorMap(np.uint8(np.clip(resized, 0, 1) * 255), cv2.COLORMAP_JET)
     colored_rgb = cv2.cvtColor(colored_bgr, cv2.COLOR_BGR2RGB)
     return cv2.addWeighted(display_rgb, 1.0 - alpha, colored_rgb, alpha, 0)
+
+
+def save_gradcam_panel(
+    display_rgb: np.ndarray,
+    heatmap: np.ndarray,
+    overlay: np.ndarray,
+    probabilities: np.ndarray,
+    class_index: int,
+    output_path: Path,
+    title: str,
+) -> None:
+    # Save an appendix-ready panel.
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    resized_heatmap = cv2.resize(
+        heatmap,
+        (display_rgb.shape[1], display_rgb.shape[0]),
+        interpolation=cv2.INTER_LINEAR,
+    )
+    figure, axes = plt.subplots(1, 3, figsize=(11.5, 4.0))
+    axes[0].imshow(display_rgb)
+    axes[0].set_title("Model input")
+    axes[1].imshow(cv2.cvtColor(display_rgb, cv2.COLOR_RGB2GRAY), cmap="gray")
+    axes[1].imshow(resized_heatmap, cmap="jet", alpha=0.65, vmin=0, vmax=1)
+    axes[1].set_title("Grad-CAM heatmap")
+    axes[2].imshow(overlay)
+    axes[2].set_title("Overlay")
+    for axis in axes:
+        axis.axis("off")
+    figure.suptitle(
+        f"{title}\nTarget: {DISPLAY_LABELS[class_index]} | "
+        f"P(Normal)={probabilities[0]:.3f}, P(Subluxation)={probabilities[1]:.3f}",
+        fontsize=11,
+        fontweight="bold",
+    )
+    figure.tight_layout()
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    figure.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.close(figure)
 
 
 def load_roi(roi_csv: Path, image_path: Path) -> Tuple[float, float, float, float]:
@@ -159,9 +237,15 @@ def main() -> None:
     parser.add_argument("--image_size", type=int, default=224)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--alpha", type=float, default=0.4)
+    parser.add_argument(
+        "--precision_policy",
+        choices=["auto", "float32", "mixed_float16", "mixed_bfloat16"],
+        default="auto",
+        help="Use recorded run_config policy by default; specify only for legacy checkpoints.",
+    )
     parser.add_argument("--roi_csv", type=Path, default=None)
     parser.add_argument("--heatmap_threshold", type=float, default=0.5)
-    parser.add_argument("--output_dir", type=Path, default=Path("chapter4_results/gradcam"))
+    parser.add_argument("--output_dir", type=Path, default=Path("results/gradcam"))
     args = parser.parse_args()
 
     if not 0 <= args.alpha <= 1:
@@ -170,11 +254,7 @@ def main() -> None:
         raise ValueError("heatmap_threshold must be between 0 and 1")
 
     tf.keras.utils.set_random_seed(args.seed)
-    model = tf.keras.models.load_model(
-        args.checkpoint,
-        custom_objects={"AttentionBlock": AttentionBlock},
-        compile=False,
-    )
+    model, precision_policy = load_checkpoint(args.checkpoint, args.precision_policy)
     inputs, display_rgb, artifact_label = load_input(
         args.image,
         args.model_type,
@@ -196,27 +276,45 @@ def main() -> None:
     input_path = args.output_dir / f"{stem}_input.png"
     heatmap_path = args.output_dir / f"{stem}_heatmap.png"
     overlay_path = args.output_dir / f"{stem}_overlay.png"
+    panel_path = args.output_dir / f"{stem}_panel.png"
     cv2.imwrite(str(input_path), cv2.cvtColor(display_rgb, cv2.COLOR_RGB2BGR))
     cv2.imwrite(str(heatmap_path), np.uint8(cv2.resize(heatmap, (args.image_size, args.image_size)) * 255))
     cv2.imwrite(str(overlay_path), cv2.cvtColor(overlay, cv2.COLOR_RGB2BGR))
+    save_gradcam_panel(
+        display_rgb,
+        heatmap,
+        overlay,
+        probabilities,
+        class_index,
+        panel_path,
+        title=f"{args.model_type.title()} — {args.scenario}",
+    )
 
     original = cv2.imread(str(args.image))
     if original is None:
         raise ValueError(f"Could not read original image: {args.image}")
+    predicted_class_index = int(np.argmax(probabilities))
     result: Dict[str, object] = {
         "checkpoint": str(args.checkpoint),
         "image": str(args.image),
         "model_type": args.model_type,
         "scenario": args.scenario,
         "target_layer": TARGET_LAYERS[args.model_type],
-        "predicted_class_index": class_index,
-        "predicted_class": DISPLAY_LABELS[class_index],
+        "precision_policy": precision_policy,
+        "predicted_class_index": predicted_class_index,
+        "predicted_class": DISPLAY_LABELS[predicted_class_index],
+        "gradcam_target_class_index": class_index,
+        "gradcam_target_class": DISPLAY_LABELS[class_index],
         "normal_probability": float(probabilities[0]),
         "subluxation_probability": float(probabilities[1]),
         "artifact_label": ARTIFACT_LABELS[artifact_label],
         "input_png": str(input_path),
         "heatmap_png": str(heatmap_path),
         "overlay_png": str(overlay_path),
+        "panel_png": str(panel_path),
+        "interpretation_scope": (
+            "qualitative only unless independently prepared expert ROI annotations are supplied"
+        ),
     }
     if args.model_type == "proposed":
         artifact_probabilities = np.asarray(raw_outputs["artifact_output"])[0]

@@ -1,14 +1,5 @@
 #!/usr/bin/env python
-"""Create leakage-resistant stratified folds for the TMJ image dataset.
-
-Exact duplicate images are identified by SHA-256 before splitting. Same-label
-copies are represented once so identical pixels cannot occur in train and test.
-Conflicting-label duplicate groups are reported and, by default, stop fold
-creation rather than being resolved silently.
-
-Patient/study-level separation still requires patient metadata. When a groups
-CSV is supplied, all rows sharing a group_id are assigned to the same split.
-"""
+# Create leakage-resistant stratified TMJ folds.
 from __future__ import annotations
 
 import argparse
@@ -38,7 +29,7 @@ class SourceImage:
 
 @dataclass(frozen=True)
 class Item:
-    """One unique image-content sample used by cross-validation."""
+    # One unique image used by cross-validation.
 
     src_path: Path
     class_name: str
@@ -93,7 +84,7 @@ def scan_source_images(input_root: Path) -> List[SourceImage]:
 
 
 def load_group_mapping(groups_csv: Path | None, input_root: Path) -> Dict[str, str]:
-    """Load optional source_path -> patient/study group_id mapping."""
+    # Load optional patient or study groups.
     if groups_csv is None:
         return {}
 
@@ -256,7 +247,7 @@ def safe_unique_name(item: Item) -> str:
 
 
 def reset_fold_dirs(output_root: Path) -> None:
-    """Remove generated fold directories while preserving the audit report."""
+    # Reset generated fold directories.
     output_root.mkdir(parents=True, exist_ok=True)
     for path in output_root.glob("fold_*"):
         if path.is_dir():
@@ -274,7 +265,7 @@ def grouped_stratified_folds(
     n_splits: int,
     random_state: int,
 ) -> List[List[int]]:
-    """Greedily assign whole groups while balancing both class counts."""
+    # Balance classes while keeping groups intact.
     if n_splits < 2:
         raise ValueError("n_splits must be at least 2")
 

@@ -1,12 +1,5 @@
 #!/usr/bin/env python
-"""Create artifact calibration previews and distortion statistics.
-
-This utility is deliberately separate from the training pipeline. It reads only
-an explicitly supplied development/training partition, does not modify source
-images, and does not select a final V2 artifact preset automatically. Candidate
-metal-streak previews must be reviewed before the training implementation is
-changed.
-"""
+# Create training-only artifact calibration previews and statistics.
 from __future__ import annotations
 
 import argparse
@@ -30,7 +23,7 @@ try:
         add_motion_blur,
         ensure_uint8,
     )
-except ImportError:  # Direct execution: python scripts/audit_artifact_calibration.py
+except ImportError:  # Direct script execution.
     from train_one_case_5fold import (
         IMAGE_EXTENSIONS,
         add_gaussian_noise,
@@ -64,7 +57,7 @@ def scan_images(root: Path) -> List[Path]:
 
 
 def balanced_sample(paths: Iterable[Path], sample_count: int, seed: int) -> List[Path]:
-    """Sample approximately equally from immediate parent class folders."""
+    # Sample approximately equally by class.
     paths = list(paths)
     if sample_count >= len(paths):
         return paths
@@ -106,13 +99,7 @@ def add_candidate_metal_streak(
     rng: np.random.Generator,
     severity: str,
 ) -> np.ndarray:
-    """Preview-only additive radiopaque streak candidate.
-
-    Unlike the V1 maximum-overlay implementation, the candidate uses an
-    additive blurred mask so a line cannot disappear merely because the source
-    pixels are already brighter than the sampled overlay. These settings are
-    candidates for visual/domain review, not approved training parameters.
-    """
+    # Create a preview-only additive metal streak.
     settings = {
         "mild": {"count": 1, "thickness": 2, "delta": 60.0, "sigma": 1.5},
         "moderate": {"count": 2, "thickness": 4, "delta": 100.0, "sigma": 2.5},
@@ -329,7 +316,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output_dir",
         type=Path,
-        default=Path("chapter4_results/artifact_calibration_v2"),
+        default=Path("results/artifact_calibration_v2"),
     )
     parser.add_argument("--preview_samples", type=int, default=8)
     parser.add_argument("--metric_samples", type=int, default=200)

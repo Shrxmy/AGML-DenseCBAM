@@ -1,1 +1,1 @@
-"""Active AGML-DenseCBAM command-line pipeline modules."""
+# Active pipeline scripts.

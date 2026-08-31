@@ -1,11 +1,5 @@
 #!/usr/bin/env python
-"""Aggregate the four thesis cases and produce Chapter IV statistics/plots.
-
-Expected case directories under --results_root:
-    benchmark_clean, benchmark_artifact_mix,
-    proposed_clean, proposed_artifact_mix
-Each directory must contain all_fold_results.csv produced by the isolated runner.
-"""
+# Aggregate the four final V2 cases for Chapter IV.
 from __future__ import annotations
 
 import argparse
@@ -43,6 +37,36 @@ AUXILIARY_METRICS = [
 ]
 
 
+def validate_legacy_test_provenance(case_dir: Path, frame: pd.DataFrame) -> None:
+    required = {"fold_manifest_sha256", "training_script_sha256"}
+    missing = required - set(frame.columns)
+    if missing or frame[list(required)].isna().any().any():
+        raise ValueError(
+            f"{case_dir} lacks explicit evaluation_split metadata and complete legacy provenance."
+        )
+
+    for fold_name in frame["fold"].astype(str):
+        predictions_path = case_dir / f"{fold_name}_predictions.csv"
+        if not predictions_path.exists():
+            raise ValueError(
+                f"{case_dir} lacks evaluation_split metadata and test-path evidence: "
+                f"{predictions_path}"
+            )
+        predictions = pd.read_csv(predictions_path)
+        path_column = next(
+            (name for name in ("filepath", "image_path") if name in predictions.columns),
+            None,
+        )
+        if path_column is None or predictions.empty:
+            raise ValueError(f"Cannot validate held-out paths in {predictions_path}.")
+        marker = f"/{fold_name.lower()}/test/"
+        normalized = predictions[path_column].astype(str).str.replace("\\", "/", regex=False).str.lower()
+        if not normalized.map(lambda value: marker in f"/{value.lstrip('/')}").all():
+            raise ValueError(
+                f"{predictions_path} contains paths outside the matching held-out test fold."
+            )
+
+
 def load_cases(results_root: Path, expected_folds: int) -> pd.DataFrame:
     frames = []
     for case_name, (model_type, scenario) in CASES.items():
@@ -69,6 +93,16 @@ def load_cases(results_root: Path, expected_folds: int) -> pd.DataFrame:
             )
         if set(frame["model_type"]) != {model_type} or set(frame["scenario"]) != {scenario}:
             raise ValueError(f"Case labels inside {path} do not match its directory.")
+        if "evaluation_split" in frame:
+            if frame["evaluation_split"].isna().any() or set(frame["evaluation_split"]) != {"test"}:
+                raise ValueError(
+                    f"{path} contains non-test predictions. "
+                    "Chapter IV analysis requires evaluation_split='test'."
+                )
+        else:
+            validate_legacy_test_provenance(path.parent, frame)
+        if "run_config_sha256" in frame and frame["run_config_sha256"].nunique() != 1:
+            raise ValueError(f"{path} mixes incompatible run-configuration fingerprints.")
         frame = frame.copy()
         frame["case"] = case_name
         frames.append(frame)
@@ -165,7 +199,7 @@ def model_comparisons(combined: pd.DataFrame, alternative: str) -> pd.DataFrame:
 
 
 def robustness_comparisons(combined: pd.DataFrame, alternative: str) -> pd.DataFrame:
-    """Positive gain means the proposed model degrades less under artifacts."""
+    # Positive gain means less degradation under artifacts.
     rows = []
     for metric in PRIMARY_METRICS:
         pivot = combined.pivot(index="fold", columns=["model_type", "scenario"], values=metric).dropna()
@@ -252,7 +286,7 @@ def plot_fold_lines(combined: pd.DataFrame, output_dir: Path) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Create final Chapter IV aggregate tables and paired tests.")
-    parser.add_argument("--results_root", type=Path, default=Path("chapter4_results"))
+    parser.add_argument("--results_root", type=Path, default=Path("results/final_v2"))
     parser.add_argument("--output_dir", type=Path, default=None)
     parser.add_argument("--expected_folds", type=int, default=5)
     parser.add_argument(

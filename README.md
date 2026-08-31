@@ -1,259 +1,105 @@
 # AGML-DenseCBAM
 
-Leakage-resistant experimental pipeline for **Normal vs Subluxation** classification from TMJ panoramic radiograph images. The proposed model combines an ImageNet-pretrained DenseNet201 encoder, CBAM attention, a primary TMD classifier, and an auxiliary synthetic-artifact classifier.
+**Attention-Guided Multi-Task Learning with DenseNet201-CBAM for Robust Temporomandibular Joint Subluxation Classification from Panoramic Radiographs under Controlled Synthetic Artifacts**
 
-> Research software only. It is not a clinical diagnostic system.
+This repository contains the research software developed for a quantitative, retrospective, non-interventional computational study of temporomandibular joint (TMJ) subluxation classification. It compares a reconstructed DenseNet201 attention benchmark with the proposed Attention-Guided Multi-Task Learning DenseNet201-CBAM model under clean and controlled synthetic-artifact conditions.
 
-## Important validity status
+The software is a research prototype. It is not a clinically validated diagnostic system.
 
-The current local 3,425-image working copy contains exact duplicate pixels, including copies crossing its train/validation/test folders and a small number carrying conflicting labels. This audit has not yet established whether those issues also occur in the complete official Figshare archive or were introduced when the local fixed split was prepared. Old folds and the results under `oldstyle_results/` and `chapter4_results/` were produced before the current leakage protection and architecture cleanup. They are retained only as legacy evidence and **must not be reported as final Chapter IV results**.
+## Study overview
 
-The active pipeline now:
+The experiment uses five matched image-wise folds and four prespecified cases:
 
-- hashes images before splitting;
-- deduplicates same-label exact copies;
-- rejects conflicting-label copies unless exclusion is explicitly approved;
-- keeps exact copies and optional patient/study groups within one split;
-- validates train/validation/test integrity before every final run;
-- fingerprints fold manifests and active training scripts so stale results cannot be resumed;
-- uses deterministic validation/test corruptions;
-- applies DenseNet201 ImageNet preprocessing;
-- maps multi-task outputs explicitly by name;
-- reports the auxiliary artifact accuracy;
-- produces paired C1-C4 statistical analysis only when all expected folds exist.
+| Case | Model | Evaluation condition |
+|---|---|---|
+| C1 | Reconstructed DenseNet201 attention benchmark | Clean |
+| C2 | Reconstructed DenseNet201 attention benchmark | Controlled artifact mix |
+| C3 | Proposed AGML-DenseCBAM | Clean |
+| C4 | Proposed AGML-DenseCBAM | Controlled artifact mix |
 
-## Active files
+The proposed model uses a shared ImageNet-pretrained DenseNet201 encoder. Its primary branch applies Convolutional Block Attention Module (CBAM) channel and spatial attention for Normal/Subluxation classification. Its auxiliary branch classifies four input conditions from pre-CBAM features: none, motion blur, Gaussian noise, and metal streak.
 
-| File | Purpose |
-|---|---|
-| `scripts/make_5fold_dataset.py` | Duplicate audit and leakage-resistant fold generation |
-| `scripts/audit_artifact_calibration.py` | Training-only V2 artifact previews and distortion audit; does not alter training |
-| `scripts/train_one_case_5fold.py` | Model, training, validation, and per-fold evaluation |
-| `scripts/run_case_5fold_isolated.py` | Runs one experimental case in a fresh process per fold |
-| `scripts/analyze_chapter4.py` | C1-C4 summary, plots, paired tests, and robustness comparison |
-| `notebooks/AGML-DenseCBAM-Training.ipynb` | Notebook interface to the active scripts |
-| `docs/THESIS_CODE_ALIGNMENT.md` | Direct audit of the paper's methodology against the implementation |
-| `docs/ARTIFACT_V2_PROTOCOL.md` | Locked V2 corruption ranges, rationale, and safeguards |
-| `base/` | Base-study implementation retained for reference only |
-| `legacy/` | Prototypes retained for traceability; do not use for final experiments |
+![AGML-DenseCBAM system architecture](docs/figures/system_architecture_v2.png)
 
-## Environment
+## Final V2 results
 
-The prepared WSL2 environment is the Miniforge environment `thesis-env` (Python 3.13.13, TensorFlow 2.21.0). Activate it before every test or training command:
+Values are the mean ± sample standard deviation across five matched folds.
+
+| Case | Accuracy | F1-score |
+|---|---:|---:|
+| C1 — Benchmark, clean | 89.21% ± 2.20% | 90.07% ± 1.96% |
+| C2 — Benchmark, artifact mix | 88.94% ± 1.00% | 89.89% ± 1.00% |
+| C3 — Proposed, clean | 89.44% ± 1.57% | 90.29% ± 1.44% |
+| C4 — Proposed, artifact mix | **90.27% ± 1.44%** | **91.15% ± 1.26%** |
+
+Under the prespecified unadjusted one-tailed paired analysis, C4 exceeded C2 for accuracy (`p = 0.0112`, Cohen's `dz = 1.616`) and F1-score (`p = 0.0137`, Cohen's `dz = 1.519`). Clean-condition differences, other primary metrics, and separate robustness-gain comparisons were not statistically significant. Neither significant result crosses a conservative Bonferroni threshold of 0.01 if all five classification metrics are treated as one family.
+
+See [`docs/TECHNICAL_NOTES.md`](docs/TECHNICAL_NOTES.md) for the complete methodological and statistical interpretation.
+
+## Repository structure
+
+```text
+base/          Released base-study notebook retained for provenance
+notebooks/     Thin notebook interface to the active scripts
+scripts/       Dataset, training, analysis, learning-curve, and Grad-CAM tools
+tests/         Integrity and reproducibility tests
+docs/          Architecture, technical notes, and operating guide
+results/       Locally generated outputs; excluded from version control
+data/          Source images; excluded from version control
+data_5_fold/   Generated fold data and manifests; excluded from version control
+```
+
+The active implementation is under `scripts/`. Files under `base/` are provenance artifacts and are not the active training pipeline.
+
+## Reproducibility
+
+The final environment was verified in WSL2 with Python 3.13.13, TensorFlow 2.21.0, and an NVIDIA GeForce RTX 4050 Laptop GPU. Exact package versions are recorded in `requirements.txt`.
 
 ```bash
-source /home/solyvie/environments/miniforge3/etc/profile.d/conda.sh
-conda activate thesis-env
-cd /home/solyvie/workspace/thesis-projects/working-run/AGML-DenseCBAM
-
+python -m pip install -r requirements.txt
 python scripts/check_tf_gpu.py
 python -m unittest discover -s tests -v
 ```
 
-Do not run `pip install -r requirements.txt` in the prepared environment unless packages are missing. The file records the exact environment for later recreation. Seeing the GPU in `nvidia-smi` is not sufficient; `scripts/check_tf_gpu.py` must also show a TensorFlow GPU device.
+A new four-case reproduction should be written to a separate directory so that preserved outputs are not overwritten. Complete commands are provided in [`docs/GUIDE.md`](docs/GUIDE.md).
 
-## Expected source data
+The repository records:
 
-```text
-data/
-  train/
-    normal/
-    subluxation/
-  validation/
-    normal/
-    subluxation/
-  test/
-    normal/
-    subluxation/
-```
+- exact-content SHA-256 auditing and deduplication;
+- fold manifests and split-integrity checks;
+- deterministic seeds and synthetic-artifact rules;
+- training-script, runner-script, configuration, checkpoint, and input fingerprints;
+- fold-level predictions, confusion matrices, learning histories, and metrics; and
+- paired statistical analysis and deterministic Grad-CAM sample selection.
 
-The original folder assignment is treated only as a source pool. New folds are created from the combined pool.
+This organization follows the transparency and documentation principles in the [IEEE Research Reproducibility guidance](https://journals.ieeeauthorcenter.ieee.org/create-your-ieee-journal-article/research-reproducibility/) and the [ML Code Completeness Checklist](https://github.com/paperswithcode/releasing-research-code).
 
-## V2 artifact calibration (before any retraining)
+## Data governance
 
-The completed V1 experiment is preserved under Git tag `pilot-v1` and `chapter4_results/final_3002_seed42/`. On branch `artifact-v2`, generate development-only previews before changing corruption parameters:
+The local source collection contained 3,425 extracted images. Exact-content auditing identified 3,010 unique images, 361 duplicate groups, 415 additional copies, and eight contradictory-label groups involving 17 files. The completed computational experiment used 3,002 unique, non-conflicting images.
 
-```bash
-python scripts/audit_artifact_calibration.py \
-  --source_root data_5_fold/fold_1/train \
-  --output_dir chapter4_results/artifact_calibration_v2 \
-  --preview_samples 8 \
-  --metric_samples 200 \
-  --seed 42
-```
+The repository does not modify the source `data/` directory. Fold generation stops when contradictory labels are detected unless the explicit exclusion policy is selected. Formal reporting still requires adviser or research-governance approval and documentation of that exclusion decision.
 
-Review `artifact_calibration_contact_sheet.png`, `artifact_distortion_summary.csv`, and `CALIBRATION_REVIEW.md`. The audit established that V1 metal augmentation was pixel-identical for 25% of the 200 sampled training images. The corrective, moderate V2 ranges are locked in `docs/ARTIFACT_V2_PROTOCOL.md`; they are applied identically to benchmark and proposed artifact-mix cases and do not guarantee proposed-model superiority.
+Patient identifiers and original-panorama provenance were not supplied. Exact-file leakage is prevented, but patient-level independence cannot be guaranteed. The source images and generated folds are therefore excluded from version control.
 
-## 1. Audit and generate safe folds
+## Interpretation limits
 
-First run with the default conflict policy:
+- Cross-validation is image-wise, not patient-wise.
+- The benchmark is a reconstruction from the publication and released notebook, not a direct reproduction using unavailable original folds or weights.
+- Synthetic artifacts are controlled computational stress tests, not clinically annotated or physically validated acquisition artifacts.
+- Grad-CAM outputs are qualitative unless independently prepared expert regions of interest are available.
+- Five paired folds provide limited power for normality and inferential testing.
+- The proposed model showed an artifact-condition accuracy and F1 advantage, but no overall speed advantage.
+- Ethical or exempt-review status must be determined by the relevant institutional review body; this repository does not imply retroactive approval.
 
-```bash
-python scripts/make_5fold_dataset.py \
-  --input_root data \
-  --output_root data_5_fold \
-  --n_splits 5 \
-  --val_size 0.15 \
-  --seed 42
-```
+## Documentation
 
-If conflicting labels exist, generation stops after writing:
+- [`docs/GUIDE.md`](docs/GUIDE.md) — installation, data preparation, reproduction, analysis, and appendix generation
+- [`docs/TECHNICAL_NOTES.md`](docs/TECHNICAL_NOTES.md) — methods, provenance, parameters, results, statistics, and limitations
+- [`docs/SYSTEM_ARCHITECTURE.md`](docs/SYSTEM_ARCHITECTURE.md) — complete pipeline and proposed-model architecture
 
-```text
-data_5_fold/duplicate_audit.csv
-```
+## Result preservation and availability
 
-Review those rows with the dataset owner/domain expert. Correcting the source labels is preferred. If the research team formally approves excluding all ambiguous exact-image groups, document that decision and run:
+The original V1 pilot is preserved by Git tag `pilot-v1`. Local V1 and final V2 outputs are stored under `results/final_3002_seed42/` and `results/final_v2/`, respectively, with tracked checksum manifests.
 
-```bash
-python scripts/make_5fold_dataset.py \
-  --input_root data \
-  --output_root data_5_fold \
-  --n_splits 5 \
-  --val_size 0.15 \
-  --seed 42 \
-  --conflict_policy exclude
-```
-
-### Patient/study-level grouping
-
-Exact-image deduplication does not prove patient independence. If patient or original-study IDs are available, create a CSV:
-
-```csv
-source_path,group_id
-data/train/normal/0001.jpg,patient_001
-data/train/subluxation/0002.jpg,patient_002
-```
-
-Then add:
-
-```bash
---groups_csv patient_groups.csv
-```
-
-All copies of every source image must be mapped. Final medical-imaging claims should clearly state whether patient/study grouping was available.
-
-## 2. Smoke test
-
-Use a separate smoke-test directory so partial results cannot be mixed with final results:
-
-```bash
-python scripts/run_case_5fold_isolated.py \
-  --model_type proposed \
-  --scenario artifact_mix \
-  --epochs 5 \
-  --batch_size 8 \
-  --artifact_loss_weight 0.3 \
-  --fold_limit 1 \
-  --output_dir chapter4_results/smoke_v2_pre_cbam/proposed_artifact_mix
-```
-
-Do not use `--skip_integrity_check` for any reported experiment.
-
-## 3. Run the four final cases
-
-Use the same hyperparameters, folds, seed, and hardware for all cases.
-
-```bash
-python scripts/run_case_5fold_isolated.py --model_type benchmark --scenario clean        --epochs 50 --output_dir chapter4_results/final_v2/benchmark_clean
-python scripts/run_case_5fold_isolated.py --model_type benchmark --scenario artifact_mix --epochs 50 --output_dir chapter4_results/final_v2/benchmark_artifact_mix
-python scripts/run_case_5fold_isolated.py --model_type proposed  --scenario clean        --epochs 50 --output_dir chapter4_results/final_v2/proposed_clean
-python scripts/run_case_5fold_isolated.py --model_type proposed  --scenario artifact_mix --epochs 50 --output_dir chapter4_results/final_v2/proposed_artifact_mix
-```
-
-Useful options:
-
-```text
---batch_size 8
---learning_rate 1e-4
---l2_strength 1e-2
---tmd_loss_weight 1.0
---artifact_loss_weight 0.3
---freeze_backbone
---no-mixed_precision
---no-class_weighting
---skip_existing
-```
-
-`--l2_strength` is kernel L2 regularization, not AdamW decoupled weight decay. The old `--weight_decay` name remains only as a compatibility alias.
-
-## 4. Generate Chapter IV analysis
-
-This command deliberately fails if any case does not contain exactly five unique folds:
-
-```bash
-python scripts/analyze_chapter4.py \
-  --results_root chapter4_results/final_v2 \
-  --expected_folds 5
-```
-
-Outputs are written to `chapter4_results/final_v2/analysis/`:
-
-- all-case fold results;
-- mean, SD, and 95% confidence intervals;
-- paired proposed-vs-benchmark tests;
-- clean-to-artifact robustness comparisons;
-- mean ± SD bar graph;
-- fold-wise Accuracy and F1 graphs;
-- TMD accuracy broken down by synthetic artifact category;
-- 10-bin Expected Calibration Error (ECE).
-
-The analyzer defaults to the paper's prespecified one-tailed superiority alternative (`greater`). Use `--alternative two-sided` only if the final methodology is changed before examining results. With only five paired folds, Shapiro-Wilk and hypothesis tests have low power. Report confidence intervals, fold-level values, and effect sizes alongside p-values. Cross-validation folds are also not fully independent estimates.
-
-## 5. Grad-CAM and optional ROI localization
-
-After final training, generate a qualitative explanation from a final checkpoint:
-
-```bash
-python scripts/generate_gradcam.py \
-  --checkpoint chapter4_results/proposed_artifact_mix/fold_1_proposed_artifact_mix_best.keras \
-  --image data_5_fold/fold_1/test/subluxation/IMAGE.jpg \
-  --model_type proposed \
-  --scenario artifact_mix
-```
-
-For Localization Energy and Grad-CAM/ROI IoU, an expert must annotate the condyle/glenoid-fossa ROI in **original-image pixel coordinates**:
-
-```csv
-sample_id,x_min,y_min,x_max,y_max
-IMAGE.jpg,120,300,520,900
-```
-
-Then add `--roi_csv expert_rois.csv`. The default IoU heatmap threshold is 0.5 and must be prespecified and reported. Do not claim quantitative anatomical localization without independently prepared expert ROIs.
-
-## Experimental cases
-
-| Case | Model | Condition |
-|---|---|---|
-| C1 | DenseNet201 connected self-attention benchmark | Clean |
-| C2 | DenseNet201 connected self-attention benchmark | Artifact mix |
-| C3 | AGML-DenseCBAM | Clean |
-| C4 | AGML-DenseCBAM | Artifact mix |
-
-The artifact mix consists of none/clean, horizontal motion blur, Gaussian noise, and simulated bright streaks. These are **synthetic corruption categories**, not validated labels for real clinical acquisition artifacts.
-
-## Reproducibility notes
-
-- Image size: 224 × 224 RGB.
-- Preprocessing: DenseNet ImageNet preprocessing to approximately `[-1, 1]`.
-- Positive class: Subluxation (`1`).
-- Validation/test artifact type and severity are deterministic per sample and seed.
-- Training artifacts remain stochastic but seeded.
-- Balanced class weighting is applied to the training TMD loss by default for both models; validation/test metrics remain unweighted.
-- The proposed TMD head uses post-CBAM globally averaged features and a 1,024/128-unit classifier.
-- The 256-unit artifact head branches from pre-CBAM DenseNet features and concatenates global average/max pooling so localized artifacts are not erased by attention or averaging.
-- V2 uses moderate blur kernels 5–9, Gaussian sigma 8–12, and visible additive localized streaks under the locked protocol in `docs/ARTIFACT_V2_PROTOCOL.md`.
-- The auxiliary artifact-loss weight defaults to 0.3; development smoke testing showed that 0.1 left the auxiliary loss at random chance.
-- `ReduceLROnPlateau` uses factor 0.1, patience 3, and minimum learning rate `1e-6`, matching the verified base-study configuration.
-- Checkpoint and early stopping monitor primary TMD validation loss.
-- Each fold runs in a fresh process to reduce GPU-memory fragmentation.
-- Pipeline throughput includes loading, preprocessing, and model inference; compare speed only on identical hardware/settings.
-- Every fold result records both the fold-manifest SHA-256 and active training-script SHA-256; `--skip_existing` rejects stale outputs when either changes.
-- Result directories and datasets are ignored by Git because they may contain large or sensitive files. Archive final CSV/config outputs separately with checksums.
-
-## Known limitations
-
-- Patient/study leakage cannot be ruled out without source metadata.
-- Synthetic corruptions do not establish robustness to every real panoramic-radiography artifact.
-- Grad-CAM localization is qualitative unless expert ROI annotations are available; ROI selection and heatmap thresholding can materially affect Localization Energy/IoU.
-- External validation on an independent institution/device dataset is still needed.
+A clean clone contains the code, documentation, reported result tables, and checksum inventories, but not the source radiographs, generated folds, trained checkpoints, or full result archive. These larger or governed artifacts must be restored separately under their documented paths or regenerated from authorized source data. New runs should use `results/reproduction_v2/` or another clearly named directory; regenerated figures and analyses should use `results/regenerated/` so preserved checksums remain unchanged.
