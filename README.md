@@ -42,6 +42,7 @@ See [`docs/TECHNICAL_NOTES.md`](docs/TECHNICAL_NOTES.md) for the complete method
 base/          Released base-study notebook retained for provenance
 notebooks/     Thin notebook interface to the active scripts
 scripts/       Dataset, training, analysis, learning-curve, and Grad-CAM tools
+scripts/pipeline/  Readable training modules for configuration, data, models, and evaluation
 tests/         Integrity and reproducibility tests
 docs/          Architecture, technical notes, and operating guide
 results/       Locally generated outputs; excluded from version control

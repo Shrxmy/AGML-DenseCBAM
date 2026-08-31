@@ -136,13 +136,15 @@ The implementation records or validates:
 - exact-content overlap across train, validation, and test partitions;
 - seed and deterministic corruption rules;
 - model, scenario, and training configuration;
-- runner and training-script SHA-256 fingerprints;
+- runner and bundled training-source SHA-256 fingerprints;
 - checkpoint and Grad-CAM input fingerprints;
 - held-out prediction paths and split identity;
 - fold-level histories, predictions, metrics, and confusion matrices; and
 - matching fold/configuration requirements before aggregate analysis.
 
-The isolated runner starts each fold in a fresh process. Existing fold outputs are skipped only when their recorded fingerprints match the active configuration.
+The isolated runner starts each fold in a fresh process. Existing fold outputs are skipped only when their recorded fingerprints match the active configuration. New runs fingerprint the training entry point together with every module under `scripts/pipeline/`, so a change in any training component changes the recorded source fingerprint.
+
+The preserved Final V2 outputs were generated before the readability refactor and retain the source fingerprints recorded at that time. Those outputs are not rewritten. Commit `9bced5a` preserves the exact pre-refactor source corresponding to the finalized repository state, while the modular implementation preserves the same deterministic artifact behavior, model structures, layer names, command-line interface, and output contracts for new reproductions.
 
 ## 10. Final V2 results
 

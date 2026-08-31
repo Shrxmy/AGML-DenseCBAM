@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import importlib.metadata
 import json
 import platform
@@ -13,18 +12,10 @@ from typing import List
 
 import pandas as pd
 
-
-def sha256_file(path: Path, chunk_size: int = 1024 * 1024) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(chunk_size), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
-def sha256_json(data: dict) -> str:
-    encoded = json.dumps(data, sort_keys=True, separators=(",", ":"), default=str).encode("utf-8")
-    return hashlib.sha256(encoded).hexdigest()
+try:
+    from .pipeline.provenance import sha256_file, sha256_json, training_source_sha256
+except ImportError:  # Direct execution: python scripts/run_case_5fold_isolated.py
+    from pipeline.provenance import sha256_file, sha256_json, training_source_sha256
 
 
 def find_folds(folds_root: Path, fold_limit: int | None) -> List[Path]:
@@ -141,7 +132,7 @@ def main() -> None:
         isolated_config["tensorflow_version"] = importlib.metadata.version("tensorflow")
     except importlib.metadata.PackageNotFoundError:
         isolated_config["tensorflow_version"] = "not-installed"
-    isolated_config["training_script_sha256"] = sha256_file(script_path)
+    isolated_config["training_script_sha256"] = training_source_sha256(script_path.parent)
     isolated_config["runner_script_sha256"] = sha256_file(Path(__file__).resolve())
     fingerprint_config = {
         key: value for key, value in isolated_config.items() if key != "skip_existing"

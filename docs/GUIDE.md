@@ -33,11 +33,27 @@ python scripts/check_tf_gpu.py
 ## 2. Run repository checks
 
 ```bash
-python -m py_compile scripts/*.py
+python -m py_compile scripts/*.py scripts/pipeline/*.py
 python -m unittest discover -s tests -v
 ```
 
 Use these checks after changing the pipeline. Model construction can also be verified without running full training by using a one-fold smoke test as described below.
+
+### 2.1 Training code layout
+
+`train_one_case_5fold.py` is the command-line entry point. Its implementation is separated into focused modules so each stage can be reviewed independently:
+
+| Module | Responsibility |
+|---|---|
+| `pipeline/config.py` | Experiment settings, labels, seeds, and TensorFlow setup |
+| `pipeline/artifacts.py` | Image preprocessing and controlled synthetic artifacts |
+| `pipeline/data.py` | Dataset indexing, integrity checks, class weights, and batch loading |
+| `pipeline/models.py` | Benchmark and proposed model definitions and compilation |
+| `pipeline/evaluation.py` | Predictions, calibration, and learning curves |
+| `pipeline/experiment.py` | Fold training, held-out evaluation, and result writing |
+| `pipeline/provenance.py` | Dataset, configuration, and bundled training-source fingerprints |
+
+The entry point re-exports the established public functions so the notebook, Grad-CAM tools, calibration utility, and existing commands remain compatible.
 
 ## 3. Prepare the source data
 
