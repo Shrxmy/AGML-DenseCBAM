@@ -34,6 +34,7 @@ ARTIFACT_LABELS = ["none", "motion_blur", "gaussian_noise", "metal_streak"]
 ARTIFACT_PROTOCOL = "v2_moderate_pre_cbam_aux"
 TRAINING_PROTOCOL = "v2_single_stage_horizontal_flip"
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff"}
+MULTI_TASK_MODEL_TYPES = {"proposed", "efficientnetv2s"}
 
 
 @dataclass(frozen=True)
@@ -478,12 +479,14 @@ def build_benchmark_model(config: RunConfig) -> Model:
     return Model(backbone.input, output, name="DenseNet201_Benchmark_SelfAttention")
 
 
-def build_proposed_model(config: RunConfig) -> Model:
-    backbone = make_backbone(config)
-    conv5 = backbone.get_layer("conv5_block32_concat").output
-
+def build_multi_task_model(
+    backbone: Model,
+    shared_features: tf.Tensor,
+    config: RunConfig,
+    model_name: str,
+) -> Model:
     # TMD branch.
-    attended = AttentionBlock("cbam", name="cbam_attention")(conv5)
+    attended = AttentionBlock("cbam", name="cbam_attention")(shared_features)
     tmd_features = layers.GlobalAveragePooling2D(name="tmd_gap")(attended)
 
     primary = layers.Dense(
@@ -503,8 +506,8 @@ def build_proposed_model(config: RunConfig) -> Model:
     )(primary)
 
     # Pre-CBAM artifact branch.
-    artifact_average = layers.GlobalAveragePooling2D(name="artifact_gap")(conv5)
-    artifact_maximum = layers.GlobalMaxPooling2D(name="artifact_gmp")(conv5)
+    artifact_average = layers.GlobalAveragePooling2D(name="artifact_gap")(shared_features)
+    artifact_maximum = layers.GlobalMaxPooling2D(name="artifact_gmp")(shared_features)
     artifact_features = layers.Concatenate(name="artifact_pooled_features")(
         [artifact_average, artifact_maximum]
     )
@@ -522,16 +525,38 @@ def build_proposed_model(config: RunConfig) -> Model:
         name="artifact_output",
     )(auxiliary)
 
-    # Named outputs keep targets and metrics aligned.
     return Model(
         backbone.input,
         {"tmd_output": tmd_output, "artifact_output": artifact_output},
-        name="AGML_DenseCBAM",
+        name=model_name,
+    )
+
+
+def build_proposed_model(config: RunConfig) -> Model:
+    backbone = make_backbone(config)
+    features = backbone.get_layer("conv5_block32_concat").output
+    return build_multi_task_model(backbone, features, config, "AGML_DenseCBAM")
+
+
+def build_efficientnetv2s_model(config: RunConfig) -> Model:
+    backbone = tf.keras.applications.EfficientNetV2S(
+        include_top=False,
+        weights="imagenet",
+        input_shape=(*config.image_size, 3),
+        pooling=None,
+        include_preprocessing=False,
+    )
+    backbone.trainable = not config.freeze_backbone
+    return build_multi_task_model(
+        backbone,
+        backbone.output,
+        config,
+        "AGML_EfficientNetV2S_CBAM",
     )
 
 
 def compile_model(model: Model, config: RunConfig) -> None:
-    if config.model_type == "proposed":
+    if config.model_type in MULTI_TASK_MODEL_TYPES:
         model.compile(
             optimizer=Adam(config.learning_rate),
             loss={"tmd_output": "categorical_crossentropy", "artifact_output": "categorical_crossentropy"},
@@ -589,7 +614,7 @@ def fit_model(
     config: RunConfig,
     checkpoint_path: Path,
 ) -> pd.DataFrame:
-    monitor = "val_tmd_output_loss" if config.model_type == "proposed" else "val_loss"
+    monitor = "val_tmd_output_loss" if config.model_type in MULTI_TASK_MODEL_TYPES else "val_loss"
     history = model.fit(
         train_gen,
         epochs=config.epochs,
@@ -614,7 +639,7 @@ def save_learning_curves(
     from matplotlib.ticker import MaxNLocator
 
     panels = [("loss", "val_loss", "Total training objective")]
-    if model_type == "proposed":
+    if model_type in MULTI_TASK_MODEL_TYPES:
         panels.extend(
             [
                 ("tmd_output_loss", "val_tmd_output_loss", "Primary TMD loss"),
@@ -778,7 +803,7 @@ def run_one_fold(fold_root: Path, config: RunConfig) -> Tuple[pd.DataFrame, pd.D
     print(df.groupby(["split", "class_name"]).size())
     print(f"Evaluation split: test ({len(evaluation_df)} images)")
 
-    multi_task = config.model_type == "proposed"
+    multi_task = config.model_type in MULTI_TASK_MODEL_TYPES
     class_weights = balanced_class_weights(train_df["tmd_label"]) if config.class_weighting else None
     print("TMD class weights:", class_weights)
     train_gen = TMJSequence(
@@ -810,7 +835,12 @@ def run_one_fold(fold_root: Path, config: RunConfig) -> Tuple[pd.DataFrame, pd.D
         config.random_state,
     )
 
-    model = build_proposed_model(config) if multi_task else build_benchmark_model(config)
+    if config.model_type == "efficientnetv2s":
+        model = build_efficientnetv2s_model(config)
+    elif multi_task:
+        model = build_proposed_model(config)
+    else:
+        model = build_benchmark_model(config)
     compile_model(model, config)
 
     case_dir = config.output_dir
@@ -956,8 +986,8 @@ def run_one_fold(fold_root: Path, config: RunConfig) -> Tuple[pd.DataFrame, pd.D
 
 def run_case(config: RunConfig) -> pd.DataFrame:
     configure_tensorflow(config)
-    if config.model_type not in {"benchmark", "proposed"}:
-        raise ValueError("model_type must be 'benchmark' or 'proposed'")
+    if config.model_type not in {"benchmark", *MULTI_TASK_MODEL_TYPES}:
+        raise ValueError("model_type must be 'benchmark', 'proposed', or 'efficientnetv2s'")
     if config.scenario not in {"clean", "artifact_mix"}:
         raise ValueError("scenario must be 'clean' or 'artifact_mix'")
 
@@ -1037,7 +1067,11 @@ def parse_args() -> RunConfig:
     parser = argparse.ArgumentParser(description="Train one thesis case across 5 folds.")
     parser.add_argument("--folds_root", type=Path, default=Path("data_5_fold"))
     parser.add_argument("--output_dir", type=Path, default=None)
-    parser.add_argument("--model_type", choices=["benchmark", "proposed"], default="proposed")
+    parser.add_argument(
+        "--model_type",
+        choices=["benchmark", "proposed", "efficientnetv2s"],
+        default="proposed",
+    )
     parser.add_argument("--scenario", choices=["clean", "artifact_mix"], default="artifact_mix")
     parser.add_argument("--image_size", type=int, default=224)
     parser.add_argument("--batch_size", type=int, default=8)

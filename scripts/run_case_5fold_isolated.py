@@ -98,7 +98,11 @@ def main() -> None:
     )
     parser.add_argument("--folds_root", type=Path, default=Path("data_5_fold"))
     parser.add_argument("--output_dir", type=Path, default=None)
-    parser.add_argument("--model_type", choices=["benchmark", "proposed"], default="proposed")
+    parser.add_argument(
+        "--model_type",
+        choices=["benchmark", "proposed", "efficientnetv2s"],
+        default="proposed",
+    )
     parser.add_argument("--scenario", choices=["clean", "artifact_mix"], default="artifact_mix")
     parser.add_argument("--image_size", type=int, default=224)
     parser.add_argument("--batch_size", type=int, default=8)
