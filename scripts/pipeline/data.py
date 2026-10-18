@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 from tensorflow.keras.utils import Sequence as KerasSequence, to_categorical
 
-from .artifacts import apply_artifact, densenet_preprocess
+from .artifacts import apply_artifact, densenet_preprocess, densenet_torch_preprocess, mild_augment
 from .config import ARTIFACT_LABELS, IMAGE_EXTENSIONS, TMD_LABELS
 from .provenance import sha256_file
 
@@ -104,11 +104,17 @@ class TMJSequence(KerasSequence):
         training: bool,
         seed: int,
         tmd_class_weights: Dict[int, float] | None = None,
+        recipe: str = "v2",
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
+        if recipe not in ("v2", "v3"):
+            raise ValueError(f"Unknown recipe: {recipe}")
         self.df = dataframe.reset_index(drop=True).copy()
-        self.image_size = image_size
+        self.image_size = image_size  # (height, width)
+        self.recipe = recipe
+        # shortcut: unbounded in-memory cache (~0.9 GB per fold at 448x224); fine for 3,002 images.
+        self._cache: Dict[str, np.ndarray] = {}
         self.batch_size = batch_size
         self.multi_task = multi_task
         self.scenario = scenario
@@ -151,12 +157,26 @@ class TMJSequence(KerasSequence):
             raise RuntimeError("Deterministic artifact labels are only available for evaluation generators.")
         return self._artifact_for(self._evaluation_rng(filepath))
 
+    def _augmentation_rng(self, filepath: str) -> np.random.Generator:
+        # Separate stream so V3 augmentation leaves artifact draws identical to V2.
+        digest = hashlib.sha256(
+            f"augment:{self.seed}:{self.epoch}:{Path(filepath).name}".encode("utf-8")
+        ).digest()
+        return np.random.default_rng(int.from_bytes(digest[:8], "little"))
+
     def _load_image(self, filepath: str) -> np.ndarray:
+        # Downstream transforms never modify the cached array in place.
+        cached = self._cache.get(filepath)
+        if cached is not None:
+            return cached
         image = cv2.imread(filepath)
         if image is None:
             raise ValueError(f"Failed to load image: {filepath}")
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        return cv2.resize(image, self.image_size, interpolation=cv2.INTER_AREA)
+        height, width = self.image_size
+        image = cv2.resize(image, (width, height), interpolation=cv2.INTER_AREA)
+        self._cache[filepath] = image
+        return image
 
     def __getitem__(self, index: int):
         batch_df = self.df.iloc[self.indices[index * self.batch_size : (index + 1) * self.batch_size]]
@@ -168,8 +188,11 @@ class TMJSequence(KerasSequence):
             item_rng = self._training_rng(row.filepath) if self.training else self._evaluation_rng(row.filepath)
             if self.training and item_rng.random() < 0.5:
                 image = cv2.flip(image, 1)
+            if self.training and self.recipe == "v3":
+                image = mild_augment(image, self._augmentation_rng(row.filepath))
             artifact_label = self._artifact_for(item_rng)
-            image = densenet_preprocess(apply_artifact(image, artifact_label, item_rng))
+            preprocess = densenet_torch_preprocess if self.recipe == "v3" else densenet_preprocess
+            image = preprocess(apply_artifact(image, artifact_label, item_rng))
             images.append(image)
             tmd_labels.append(int(row.tmd_label))
             artifact_labels.append(int(artifact_label))

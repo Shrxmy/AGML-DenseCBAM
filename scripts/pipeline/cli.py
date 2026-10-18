@@ -13,7 +13,9 @@ def parse_args() -> RunConfig:
     parser.add_argument("--output_dir", type=Path, default=None)
     parser.add_argument("--model_type", choices=["benchmark", "proposed"], default="proposed")
     parser.add_argument("--scenario", choices=["clean", "artifact_mix"], default="artifact_mix")
-    parser.add_argument("--image_size", type=int, default=224)
+    parser.add_argument("--image_size", type=int, default=224, help="Input width (and height unless --image_height).")
+    parser.add_argument("--image_height", type=int, default=None, help="Input height; defaults to --image_size.")
+    parser.add_argument("--recipe", choices=["v2", "v3"], default="v2", help="v3: aspect-preserving input, torch preprocessing, mild augmentation, hflip TTA.")
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--epochs", type=int, default=50)
     parser.add_argument("--learning_rate", type=float, default=1e-4)
@@ -55,6 +57,8 @@ def parse_args() -> RunConfig:
         help="Canonical isolated-run fingerprint supplied by the runner.",
     )
     args = parser.parse_args()
+    if args.recipe == "v3" and args.image_height is None:
+        parser.error("--recipe v3 requires an explicit --image_height (aspect-preserving input)")
 
     output_dir = args.output_dir or Path("results/runs") / f"{args.model_type}_{args.scenario}"
     return RunConfig(
@@ -62,7 +66,7 @@ def parse_args() -> RunConfig:
         output_dir=output_dir,
         model_type=args.model_type,
         scenario=args.scenario,
-        image_size=(args.image_size, args.image_size),
+        image_size=(args.image_height or args.image_size, args.image_size),
         batch_size=args.batch_size,
         epochs=args.epochs,
         learning_rate=args.learning_rate,
@@ -77,4 +81,5 @@ def parse_args() -> RunConfig:
         mixed_precision=args.mixed_precision,
         class_weighting=args.class_weighting,
         run_config_sha256=args.run_config_sha256,
+        recipe=args.recipe,
     )

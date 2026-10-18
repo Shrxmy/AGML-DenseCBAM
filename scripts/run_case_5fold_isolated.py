@@ -92,6 +92,8 @@ def main() -> None:
     parser.add_argument("--model_type", choices=["benchmark", "proposed"], default="proposed")
     parser.add_argument("--scenario", choices=["clean", "artifact_mix"], default="artifact_mix")
     parser.add_argument("--image_size", type=int, default=224)
+    parser.add_argument("--image_height", type=int, default=None, help="Input height; defaults to --image_size (width).")
+    parser.add_argument("--recipe", choices=["v2", "v3"], default="v2")
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--epochs", type=int, default=50)
     parser.add_argument("--learning_rate", type=float, default=1e-4)
@@ -113,6 +115,8 @@ def main() -> None:
     parser.add_argument("--mixed_precision", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--class_weighting", action=argparse.BooleanOptionalAction, default=True)
     args = parser.parse_args()
+    if args.recipe == "v3" and args.image_height is None:
+        parser.error("--recipe v3 requires an explicit --image_height (aspect-preserving input)")
 
     output_dir = args.output_dir or Path("results/runs") / f"{args.model_type}_{args.scenario}"
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -153,6 +157,8 @@ def main() -> None:
             "model_type",
             "scenario",
             "image_size",
+            "image_height",
+            "recipe",
             "batch_size",
             "epochs",
             "learning_rate",
@@ -246,6 +252,9 @@ def main() -> None:
             "--single_fold",
             fold_dir.name,
         ]
+        cmd += ["--recipe", args.recipe]
+        if args.image_height is not None:
+            cmd += ["--image_height", str(args.image_height)]
         if args.freeze_backbone:
             cmd.append("--freeze_backbone")
         if args.skip_integrity_check:

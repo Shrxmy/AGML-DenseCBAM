@@ -101,3 +101,23 @@ def apply_artifact(
 def densenet_preprocess(image: np.ndarray) -> np.ndarray:
     # Map image values from [0, 255] to [-1, 1].
     return image.astype(np.float32) / 127.5 - 1.0
+
+
+IMAGENET_MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
+IMAGENET_STD = np.array([0.229, 0.224, 0.225], dtype=np.float32)
+
+
+def densenet_torch_preprocess(image: np.ndarray) -> np.ndarray:
+    # Keras DenseNet ImageNet weights expect "torch" mode (RGB mean/std).
+    return (image.astype(np.float32) / 255.0 - IMAGENET_MEAN) / IMAGENET_STD
+
+
+def mild_augment(image: np.ndarray, rng: np.random.Generator) -> np.ndarray:
+    """V3 training-only geometry and intensity jitter, applied before artifacts."""
+    h, w = image.shape[:2]
+    matrix = cv2.getRotationMatrix2D((w / 2, h / 2), float(rng.uniform(-7, 7)), float(rng.uniform(0.9, 1.1)))
+    matrix[:, 2] += (float(rng.uniform(-0.05, 0.05)) * w, float(rng.uniform(-0.05, 0.05)) * h)
+    image = cv2.warpAffine(image, matrix, (w, h), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT_101)
+    contrast, brightness = float(rng.uniform(0.9, 1.1)), float(rng.uniform(-0.1, 0.1)) * 255.0
+    mean = image.mean()
+    return ensure_uint8((image.astype(np.float32) - mean) * contrast + mean + brightness)

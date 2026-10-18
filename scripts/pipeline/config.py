@@ -22,6 +22,10 @@ DISPLAY_LABELS = ["Normal", "Subluxation"]
 ARTIFACT_LABELS = ["none", "motion_blur", "gaussian_noise", "metal_streak"]
 ARTIFACT_PROTOCOL = "v2_moderate_pre_cbam_aux"
 TRAINING_PROTOCOL = "v2_single_stage_horizontal_flip"
+TRAINING_PROTOCOLS = {
+    "v2": TRAINING_PROTOCOL,
+    "v3": "v3b_aspect_torchprep_mildaug_tta",
+}
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff"}
 
 
@@ -46,6 +50,7 @@ class RunConfig:
     mixed_precision: bool
     class_weighting: bool
     run_config_sha256: str | None = None
+    recipe: str = "v2"
 
 
 def seed_everything(seed: int) -> None:
@@ -79,5 +84,8 @@ def effective_run_config_sha256(config: RunConfig) -> str:
     serializable["output_dir"] = str(config.output_dir.resolve())
     serializable["image_size"] = list(config.image_size)
     serializable["run_config_sha256"] = None
+    if config.recipe == "v2":
+        # Keep historical V2 fingerprints unchanged.
+        serializable.pop("recipe")
     return sha256_json(serializable)
 

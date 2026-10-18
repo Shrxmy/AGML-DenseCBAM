@@ -18,7 +18,7 @@ from .config import (
     ARTIFACT_LABELS,
     ARTIFACT_PROTOCOL,
     DISPLAY_LABELS,
-    TRAINING_PROTOCOL,
+    TRAINING_PROTOCOLS,
     RunConfig,
     configure_tensorflow,
     effective_run_config_sha256,
@@ -28,6 +28,7 @@ from .data import TMJSequence, balanced_class_weights, index_split_dataset
 from .evaluation import (
     collect_predictions,
     expected_calibration_error,
+    inference_fn,
     save_learning_curves,
     unpack_batch,
 )
@@ -59,6 +60,7 @@ def run_one_fold(fold_root: Path, config: RunConfig) -> Tuple[pd.DataFrame, pd.D
         True,
         config.random_state,
         tmd_class_weights=class_weights,
+        recipe=config.recipe,
     )
     val_gen = TMJSequence(
         val_df,
@@ -68,6 +70,7 @@ def run_one_fold(fold_root: Path, config: RunConfig) -> Tuple[pd.DataFrame, pd.D
         config.scenario,
         False,
         config.random_state,
+        recipe=config.recipe,
     )
     evaluation_gen = TMJSequence(
         evaluation_df,
@@ -77,6 +80,7 @@ def run_one_fold(fold_root: Path, config: RunConfig) -> Tuple[pd.DataFrame, pd.D
         config.scenario,
         False,
         config.random_state,
+        recipe=config.recipe,
     )
 
     model = build_proposed_model(config) if multi_task else build_benchmark_model(config)
@@ -102,7 +106,7 @@ def run_one_fold(fold_root: Path, config: RunConfig) -> Tuple[pd.DataFrame, pd.D
 
     # Warm up before timing.
     warmup_x, _ = unpack_batch(evaluation_gen[0])
-    _ = model(warmup_x, training=False)
+    _ = inference_fn(model, evaluation_gen)(warmup_x)
     start = time.perf_counter()
     (
         y_true,
@@ -170,7 +174,7 @@ def run_one_fold(fold_root: Path, config: RunConfig) -> Tuple[pd.DataFrame, pd.D
                 "learning_curve_png": str(learning_curve_path),
                 "epochs_ran": len(history_df),
                 "evaluation_split": "test",
-                "training_protocol": TRAINING_PROTOCOL,
+                "training_protocol": TRAINING_PROTOCOLS[config.recipe],
                 "tensorflow_version": tf.__version__,
                 "precision_policy": mixed_precision.global_policy().name,
                 "artifact_protocol": ARTIFACT_PROTOCOL,
@@ -260,7 +264,7 @@ def run_case(config: RunConfig) -> pd.DataFrame:
         serializable["gpu_devices"] = [device.name for device in tf.config.list_physical_devices("GPU")]
         serializable["precision_policy"] = mixed_precision.global_policy().name
         serializable["artifact_protocol"] = ARTIFACT_PROTOCOL
-        serializable["training_protocol"] = TRAINING_PROTOCOL
+        serializable["training_protocol"] = TRAINING_PROTOCOLS[config.recipe]
         serializable["training_script_sha256"] = training_source_sha256()
         serializable["effective_run_config_sha256"] = effective_run_config_sha256(config)
         json.dump(serializable, f, indent=2)

@@ -114,11 +114,25 @@ def expected_calibration_error(
     return float(ece)
 
 
+def inference_fn(model: Model, generator: TMJSequence):
+    """V2 keeps its historical eager call; V3 uses compiled inference.
+
+    Eager functional calls keep all DenseNet201 concat intermediates alive, which
+    exhausts 6 GB at the V3 448x224 input.
+    """
+    if getattr(generator, "recipe", "v2") == "v3":
+        return model.predict_on_batch
+    return lambda batch: model(batch, training=False)
+
+
 def collect_predictions(
     model: Model,
     generator: TMJSequence,
     multi_task: bool,
+    tta: bool | None = None,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, List[str]]:
+    if tta is None:
+        tta = getattr(generator, "recipe", "v2") == "v3"
     y_true: List[int] = []
     y_pred: List[int] = []
     y_conf: List[float] = []
@@ -126,6 +140,7 @@ def collect_predictions(
     artifact_pred: List[int] = []
     artifact_conf: List[float] = []
     filepaths: List[str] = []
+    infer = inference_fn(model, generator)
 
     for i in range(len(generator)):
         start = i * generator.batch_size
@@ -134,7 +149,15 @@ def collect_predictions(
         batch_df = generator.df.iloc[batch_indices]
         batch_paths = batch_df["filepath"].tolist()
         x, y = unpack_batch(generator[i])
-        pred = model(x, training=False)
+        pred = infer(x)
+        if tta:
+            # Horizontal-flip test-time augmentation: average both softmax outputs.
+            flipped = infer(np.ascontiguousarray(x[:, :, ::-1, :]))
+            pred = (
+                {key: (np.asarray(pred[key]) + np.asarray(flipped[key])) / 2 for key in pred}
+                if multi_task
+                else (np.asarray(pred) + np.asarray(flipped)) / 2
+            )
         if multi_task:
             pred_tmd = np.asarray(pred["tmd_output"])
             pred_artifact = np.asarray(pred["artifact_output"])
