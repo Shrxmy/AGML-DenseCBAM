@@ -34,6 +34,9 @@ EVALUATION_BOUNDARY = {
 }
 
 
+CANDIDATES = ("none", "multiscale_gated", "densenet121", "artifact_gated")
+
+
 @dataclass(frozen=True)
 class DevelopmentConfig:
     folds_root: Path
@@ -52,6 +55,7 @@ class DevelopmentConfig:
     folds: tuple[str, ...] | None = None
     image_height: int | None = None
     recipe: str = "v2"
+    candidate: str = "none"
 
     @property
     def input_hw(self) -> tuple[int, int]:
@@ -72,6 +76,8 @@ class DevelopmentConfig:
             result.pop("image_height")
         if result["recipe"] == "v2":
             result.pop("recipe")
+        if result["candidate"] == "none":
+            result.pop("candidate")
         result["folds_root"] = str(self.folds_root.resolve())
         result["output_dir"] = str(self.output_dir.resolve())
         result.update(
@@ -103,6 +109,8 @@ def parse_args(argv: list[str] | None = None) -> tuple[DevelopmentConfig, bool]:
     parser.add_argument("--image-height", type=int, default=None, help="Input height; defaults to --image-size.")
     parser.add_argument("--recipe", choices=("v2", "v3"), default="v2",
                         help="v3: aspect-preserving input, torch preprocessing, mild augmentation, hflip TTA.")
+    parser.add_argument("--candidate", choices=CANDIDATES, default="none",
+                        help="V4 screen: multiscale_gated (A), densenet121 (B) or artifact_gated (C). Needs cbam and the auxiliary head.")
     parser.add_argument("--batch-size", type=int, default=8)
     parser.add_argument("--epochs", type=int, default=50)
     parser.add_argument("--learning-rate", type=float, default=1e-4)
@@ -133,6 +141,10 @@ def validate_config(config: DevelopmentConfig) -> None:
         raise ValueError("image_size must be >=32; batch_size and epochs must be positive")
     if config.recipe not in ("v2", "v3"):
         raise ValueError("recipe must be v2 or v3")
+    if config.candidate not in CANDIDATES:
+        raise ValueError(f"candidate must be one of {CANDIDATES}")
+    if config.candidate != "none" and (config.attention, config.auxiliary_head) != ("cbam", "on"):
+        raise ValueError("V4 candidates need --attention cbam and --auxiliary-head on")
     if config.image_height is not None and (type(config.image_height) is not int or config.image_height < 32):
         raise ValueError("image_height must be an integer >=32")
     if config.recipe == "v3" and config.image_height is None:
@@ -273,6 +285,8 @@ def make_plan(config: DevelopmentConfig, project_root: Path = PROJECT_ROOT) -> d
     commands = []
     for attention in ("cbam", "none"):
         for auxiliary in ("on", "off"):
+            if config.candidate != "none" and (attention, auxiliary) != ("cbam", "on"):
+                continue
             cell_output = output.parent / f"{output.name}_{attention}_aux_{auxiliary}"
             guard_output(replace(config, attention=attention, auxiliary_head=auxiliary,
                                  output_dir=cell_output), project_root)
@@ -284,6 +298,8 @@ def make_plan(config: DevelopmentConfig, project_root: Path = PROJECT_ROOT) -> d
                                 ("learning-rate", config.learning_rate), ("l2-strength", config.l2_strength), ("seed", config.seed)):
                 command += [f"--{flag}", str(value)]
             command += ["--recipe", config.recipe]
+            if config.candidate != "none":
+                command += ["--candidate", config.candidate]
             if config.image_height is not None:
                 command += ["--image-height", str(config.image_height)]
             command += ["--folds", *(fold.name for fold in folds)]
