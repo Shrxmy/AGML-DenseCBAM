@@ -1,0 +1,102 @@
+{
+  "master_status": "AUTHOR_APPROVED_spacious_master_v3",
+  "current_chapter_iv_pages": 50,
+  "details": "Current portrait expansions; exact master unchanged; no senior/published artwork copied into public docs assets",
+  "assets": [
+    {
+      "repo_path": "docs/figures/approved/architecture_master.pdf",
+      "source_path": "output/thesis_refresh/chapter4/manuscript_assets/approved_unified_architecture_master.pdf",
+      "sha256": "542e1aeb40ce4174d88f16f950bbc12121affcc237e97be8d3b1847c818f77ef"
+    },
+    {
+      "repo_path": "docs/figures/approved/architecture_master.png",
+      "source_path": "output/thesis_refresh/chapter4/architecture/spacious_master_v3/spacious_master.png",
+      "sha256": "494349607dabf51278b2fe4f526e6a3b21f2880c30c57311960f3107b4d3f6fc"
+    },
+    {
+      "repo_path": "docs/figures/approved/architecture_master.svg",
+      "source_path": "output/thesis_refresh/chapter4/architecture/spacious_master_v3/spacious_master.svg",
+      "sha256": "fd7b67ed36e7fbdf0fc37b1046feffd9fe6cc7168c4f436f1f25fcee4eb14547"
+    },
+    {
+      "repo_path": "docs/figures/approved/layout.json",
+      "source_path": "output/thesis_refresh/chapter4/architecture/spacious_master_v3/layout.json",
+      "sha256": "4c35dd4cac9fb48e04c0d595ce6668b2b60803338fa347b3d5c5b39a39b6aea7"
+    },
+    {
+      "repo_path": "docs/figures/approved/checks.json",
+      "source_path": "output/thesis_refresh/chapter4/architecture/spacious_master_v3/checks.json",
+      "sha256": "c85db14fa77747708623787e2feee280e25fa88e7f3fb5672acb41d5c6008993"
+    },
+    {
+      "repo_path": "docs/figures/approved/module_1.png",
+      "source_path": "output/thesis_refresh/chapter4/manuscript_assets/module_1.png",
+      "sha256": "89765552025e80860ad1d8f223562ac04000b12de0eef36f69594f382036b486"
+    },
+    {
+      "repo_path": "docs/figures/approved/module_1.pdf",
+      "source_path": "output/thesis_refresh/chapter4/manuscript_assets/module_1.pdf",
+      "sha256": "9d03d979342a246d86447e4e099ef231ea833b2802afafdfc68adbb0832db080"
+    },
+    {
+      "repo_path": "docs/figures/approved/module_2.png",
+      "source_path": "output/thesis_refresh/chapter4/manuscript_assets/module_2.png",
+      "sha256": "55583c3abfaca5a686718f4a3f3672729def32488996b1784b2a9f835b67d790"
+    },
+    {
+      "repo_path": "docs/figures/approved/module_2.pdf",
+      "source_path": "output/thesis_refresh/chapter4/manuscript_assets/module_2.pdf",
+      "sha256": "bb66fdb4c8c7d9394ff3bb2988397ac9182593fdcaa720bfc256d1cd6c309e3d"
+    },
+    {
+      "repo_path": "docs/figures/approved/module_4.png",
+      "source_path": "output/thesis_refresh/chapter4/manuscript_assets/module_4_clean.png",
+      "sha256": "c2c0bf5630e4c956245882e94b9beef2343309ff22d1b96a4d90ad714f0d7150"
+    },
+    {
+      "repo_path": "docs/figures/approved/module_4.pdf",
+      "source_path": "output/thesis_refresh/chapter4/manuscript_assets/module_4_clean.pdf",
+      "sha256": "bbcd71dd1c2ad59967536c11fe7698386c36cdc213677abd1d6b759586ce42ee"
+    },
+    {
+      "repo_path": "docs/figures/approved/module_5.png",
+      "source_path": "output/thesis_refresh/chapter4/manuscript_assets/module_5.png",
+      "sha256": "b103a166444e6d42339109cee06912e3ec42444d006f615c20606f502cc7e867"
+    },
+    {
+      "repo_path": "docs/figures/approved/module_5.pdf",
+      "source_path": "output/thesis_refresh/chapter4/manuscript_assets/module_5.pdf",
+      "sha256": "74b395672400e80142ff8e8d6bfaf2be7b186784bb2cd518c7ff335824f3ee9e"
+    },
+    {
+      "repo_path": "docs/figures/approved/module_3.png",
+      "source_path": "output/thesis_refresh/chapter4/portrait_revision/input_preparation_portrait.png",
+      "sha256": "7d1e1a9ff936222b25eb6c0f8a91f64b68d6977b95134657708eadb9cf0a8e86"
+    },
+    {
+      "repo_path": "docs/figures/approved/cbam_detail.png",
+      "source_path": "output/thesis_refresh/chapter4/portrait_revision/cbam_detail/implemented_cbam.png",
+      "sha256": "6bdc74e616152270d5ae3d5b6b6d337ff7b9a6e58752cbc558c6d63ea29ed618"
+    },
+    {
+      "repo_path": "docs/figures/approved/module_3.pdf",
+      "source_path": "output/thesis_refresh/chapter4/portrait_revision/input_preparation_portrait.pdf",
+      "sha256": "0320ed6323b4537d286e7ab4a02605bc0f8bb9d20c97fa481da2fb1db2b09404"
+    },
+    {
+      "repo_path": "docs/figures/approved/cbam_detail.pdf",
+      "source_path": "output/thesis_refresh/chapter4/portrait_revision/cbam_detail/implemented_cbam.pdf",
+      "sha256": "b76d10bee9798669960a241596975296c6734a9ecfc23fb6e80e0d4b4d98debe"
+    },
+    {
+      "repo_path": "docs/figures/approved/module_3.svg",
+      "source_path": "output/thesis_refresh/chapter4/portrait_revision/input_preparation_portrait.svg",
+      "sha256": "bd725536a66da042e0c4caf9576ac3eeee82af38fa44d0a599f4524b7dfe5742"
+    },
+    {
+      "repo_path": "docs/figures/approved/cbam_detail.svg",
+      "source_path": "output/thesis_refresh/chapter4/portrait_revision/cbam_detail/implemented_cbam.svg",
+      "sha256": "d831e912e502de5ecc08228436be7ad9922de014a22ea767e2386e14b009d953"
+    }
+  ]
+}

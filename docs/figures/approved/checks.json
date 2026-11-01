@@ -1,0 +1,1355 @@
+{
+  "page_inches": [
+    11,
+    17
+  ],
+  "minimum_actual_pdf_font_pt": 11.0,
+  "fonts": [
+    "Arial Bold",
+    "Arial Regular"
+  ],
+  "raster_images": 0,
+  "vector_paths": 111,
+  "route_node_collisions": [],
+  "proper_crossings": [],
+  "route_text_intersections": [],
+  "endpoint_errors": [],
+  "text_fit_errors": [],
+  "actual_glyph_and_path_bounds_errors": [],
+  "test_cannot_reach_fit": true,
+  "conditional_definitions_only": true,
+  "references_not_classifier": true,
+  "preserved_unchanged": true,
+  "preserved_hashes": {
+    "paper\\PROGRESS.md": "98843f3ae1d261a4ff0aa2bec925a78fe5ec2c54ee7e8310a56dd345273c98f6",
+    "paper\\README.md": "fe4b50a2b1621ec5188963fe3d2d4c61f38b84e310d968df77a7d5822a44ecd2",
+    "paper\\chapters\\01_Chapter_I.docx": "9d94b1c2d8e666e81a61c1234667b33930adac972d05120cc7504ec74018b4da",
+    "paper\\chapters\\02_Chapter_II.docx": "91360df39304a3c614ea5167b01a8d1e6b2d1549a04dd68f42f0eae3bfbd512a",
+    "paper\\chapters\\03_Chapter_III.docx": "279e67629a1f067f3867d125abd5a9c58fa9150ce8657ec5b5a5f4eef2e2938d",
+    "paper\\forEditing\\DS10_3CSD - THESIS PAPER Formatted for Thesis 1.docx": "9f279b564441509af6c85ac5092e6a54041fcba2d44dfe5593bbb46b05d4f1d6",
+    "paper\\forEditing\\THS Manuscript Template.docx": "a8d7a75927e1abdf4e7ec3aaa8ed8d20de20565162359db2ff5c4d4f491d4beb",
+    "paper\\seniorsPaperReferences\\CS2_ACMIEEE.pdf": "9aa7ba594d86e0f7b93e48dca12de92f1b5a5e26a8ba54a80bcc0611ed3c04d1",
+    "paper\\seniorsPaperReferences\\DS22_ACMIEEE.pdf": "08091553a4c2d6915f618b15ff463315d3e7124574d56b8f2c3eeeebc0be7f39",
+    "paper\\seniorsPaperReferences\\DS22_FullDocumentation.pdf": "808d08bba309d23b6b74d8d3b341438b8c0046382c08b2b4b1b1c4227bbef27a",
+    "paper\\seniorsPaperReferences\\DS31_ACM.pdf": "0066b89e02e7552c44b04dae3069c8778222ef8a49551bd91032dd55a1fb5892",
+    "paper\\seniorsPaperReferences\\DS31_FullDocumentation.pdf": "0c231f0dd98b80c85843aab09677bc9a119f1cbed79b13ce1542626cbc9e05fa",
+    "paper\\seniorsPaperReferences\\DS32_FullDocumentation.pdf": "f319a27286e94f8d0bb91a8206372cf7ccbf4eecc421794e822f7a1f44d89191",
+    "paper\\seniorsPaperReferences\\DS32_IEEE.pdf": "7445b36be5475d290509d821f211543da8542bb5896474056a3f8b9da7493c43",
+    "paper\\seniorsPaperReferences\\DS9_ACMIEEE.pdf": "2b62527cc0551ac7f6962be63e5705e5ed1942a7db800cb0bfb55778d19ab353",
+    "paper\\seniorsPaperReferences\\DS9_FullDocumentation.pdf": "1b88dc22693bf3800ea483ed9f2d87c4ed9b5d5e51d1076c474e82bdbc6f7f93",
+    "paper\\seniorsPaperReferences\\README.md": "5481a08a8c15bcd3d58588ab682501f5ac12f1d973b07953362469296004744a",
+    "output\\thesis_refresh\\chapter4\\architecture\\architecture_contracts.json": "29d9deebbef93c80e5f84616ac333e7b1de9dbcf2f52f31430a1f1cf8b690677",
+    "output\\thesis_refresh\\chapter4\\architecture\\DESIGN_PROPOSAL.md": "2c7560fad32a29c7424c9a01a0e7c857dc680a9a60a3865d82f7e1c3ae2f038c",
+    "output\\thesis_refresh\\chapter4\\architecture\\centered_input_overview_v1\\centered_input_overview.pdf": "7eac10d05ce514db507200017d5334813a00e8db0d0b98a39d0136ea7424a3d8",
+    "output\\thesis_refresh\\chapter4\\architecture\\centered_input_overview_v1\\centered_input_overview.png": "06450934287189d0515179524bfe3e9304102090eeec8bd7695b0f739ca78122",
+    "output\\thesis_refresh\\chapter4\\architecture\\centered_input_overview_v1\\centered_input_overview.svg": "863524d586a8321c78d45df09342a1ae5795ddbabc94c50dc5cfde40159e9062",
+    "output\\thesis_refresh\\chapter4\\architecture\\centered_input_overview_v1\\diagram_vector.pdf": "2ca52a00e116d6158bc673cca96cb0755b2bc276d2398cda84537dde60a5075c",
+    "output\\thesis_refresh\\chapter4\\architecture\\centered_input_overview_v1\\fit_width_review.png": "7eda1c6ec9e5a26245f0d5b98f819ac6d163610d416c790ba9bdb5067bfd2762",
+    "output\\thesis_refresh\\chapter4\\architecture\\centered_input_overview_v1\\MODULE_TABLE.md": "3a8a9fbaeb4cf8ce991a80541719a96783d8c0023a296588fbfbd97879df8b07",
+    "output\\thesis_refresh\\chapter4\\architecture\\centered_input_overview_v1\\normal_page_review.png": "2b8126c7b8a4278896971de651c3ff74c573b7d97f76b92c176fbb2f438a8194",
+    "output\\thesis_refresh\\chapter4\\architecture\\centered_input_overview_v1\\README.md": "f7724207e1ce616b3a756ba2c6c480cfff7496d86b188ea8be1cdb3cc147f9b3",
+    "output\\thesis_refresh\\chapter4\\architecture\\clean_model_overview_v1\\CLEAN_LAYOUT_REVIEW.md": "03256a37ed899f4b2c2fee7e0371d4af678376f5b16bbafedbaac3a606f56529",
+    "output\\thesis_refresh\\chapter4\\architecture\\clean_model_overview_v1\\clean_model_overview.pdf": "896e98f1e5340037e926ad8c84905dfc5a30f5291ef89da4c7c9862b061f3389",
+    "output\\thesis_refresh\\chapter4\\architecture\\clean_model_overview_v1\\clean_model_overview.png": "074451a8526ea59bcf1c408e9d7a51e4f20c102fedd84c545f4604e9f9b9b263",
+    "output\\thesis_refresh\\chapter4\\architecture\\clean_model_overview_v1\\clean_model_overview.svg": "0afc9488749c4926dde706ab634c98d9e88f3164d1c3a9d87dd8ac55da6b2a40",
+    "output\\thesis_refresh\\chapter4\\architecture\\clean_model_overview_v1\\diagram_vector.pdf": "b97ed30c0258eb1ac6a338070df97c1eaf3e951c9855df9e4bc46ebd3f52fb7a",
+    "output\\thesis_refresh\\chapter4\\architecture\\clean_model_overview_v1\\fit_width_review.png": "4d36165efb390b091b4a21a50a84d1fce1af403203814bcc387171a63a80a777",
+    "output\\thesis_refresh\\chapter4\\architecture\\clean_model_overview_v1\\MODULE_TABLE.md": "3a8a9fbaeb4cf8ce991a80541719a96783d8c0023a296588fbfbd97879df8b07",
+    "output\\thesis_refresh\\chapter4\\architecture\\clean_model_overview_v1\\normal_page_review.png": "231852f7b6856081278c0ac6b7bd038b740d6bf3927387731f511dc4d8122dd6",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v1\\checks.json": "82f92fdeed10cad11b146a00f901f8bb29ace4534b35e9579aa994b8ef0657f0",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v1\\diagram.pdf": "70b7682eefac1db4cbc513e5e480323b6a9dee7a5732eb36eef99eb0d5039d18",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v1\\full_pdf_proof.png": "66d83fc7b3dc9d5003c1e31659df2c5aae150d18880cf1106695e0fb67199528",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v1\\inspect_evaluation.png": "1e0e3f15f83e35f6d09d6cae2cf19aa38eb4e1a41f97bc0740721f84873a115c",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v1\\inspect_network.png": "b8428d307927bdbbc0ee0476b79e244a11b22b1e27e3cd0af1168fca95b40e0d",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v1\\layout.json": "a0d6b73924790d986f48e50041b575bf00da6423401d3d87dad1ffe074fff106",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v1\\README.md": "57581e09d6238d3b982192ec078eba02cf0431da2c7b0fe2a0de40d53ec4643b",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v1\\unified_architecture.pdf": "221d12682c4baf392bd94f2afafc413b1a4b1873f5d121f2adb48d09caee1026",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v1\\unified_architecture.png": "1816aecb80fbb584bb45059137ed8cc4fcf270eac264ca00d6add39da6c7e0c0",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v1\\unified_architecture.svg": "41747b4050dd8f87ca399c1b4b42c343f274d5da0becbe50e3776d9b2dabd07e",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v1\\unified_architecture_defense.pdf": "55a12bc8debbbcdd320e562581e5f8839625235f1ee1f81b6c9fe58da887a4ca",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v1\\unified_architecture_defense.png": "2009db63be17712fc147f4d1c193f9f15fbb77361b5335adaf94beaced10b941",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v1\\unified_architecture_defense.svg": "3e05d0fd09ec73c12b18bb2a14a782a45f92e42636bdb396fa66cb9c04f8af04",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v2\\checks.json": "3748ce9875fa1031324354320c8c2b1e6f1ad4ba330a41aecdfd838921304d69",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v2\\diagram.pdf": "2636c76249cd7685241e94f6f69445c963e0bd22210562fa099e3b8b5f8f0494",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v2\\full_pdf_proof.png": "1ca487b7747e36737b82b6b7abc256a9f418376e0463e0b3323cf279aa56c456",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v2\\inspect_evaluation.png": "58fe12fe5d20d23c846b1e60009fe9a2d566c58513545dc57a7fb86097469eee",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v2\\inspect_network.png": "687f92c4b780e695a679ce0f992c40859b067617e98b5be59ceaf2c9cd39fc4a",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v2\\layout.json": "d4d8a1598fc6ba2d72dca7f1f6615836a6fac90a2e77308164be10ca41f9f968",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v2\\legend.md": "84851133242379c6fb5752e34fdcdc8f503cad66d50c87f5d179dfc49245ba4d",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v2\\README.md": "bc92cc1764eae1d3a7d644651811404f62aea39e14b30714b5adf4bc5fde36fd",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v2\\unified_architecture.pdf": "6032f6d376fd2aa6cfd6d2380fea1fb639668012fe165e9366f08657ef02ae7d",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v2\\unified_architecture.png": "c04d2b926a6b6ee0a981106f7cfed7c431de26a0071e076937aad33e89ec4154",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v2\\unified_architecture.svg": "94285343da736a5c521131a3ef03db87d4ab4d11307143a4e6c7260d2b3dc31e",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v2\\unified_architecture_defense.pdf": "e1086bf4a6fb72562aeff6e263b086d2d71bfee94f424d0377a89aa3a3d7bba5",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v2\\unified_architecture_defense.png": "d97526005028266069ee32c6f415aaae329643dd29f13a02e3fccf71b3b04f31",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v2\\unified_architecture_defense.svg": "786dd6c594b5c1f650fae8d505d6c0a7f588a75890fbd59dc0cca32684d8ab00",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v3\\checks.json": "30581599d9812578022dd918e36a9e261ed841970299af639b22ca8ca8795db8",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v3\\diagram.pdf": "bc5d09cb1c2daa0a2c251df1260f410bbf5744518fb1c08cfe5489de96751c24",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v3\\full_pdf_proof.png": "83a178903889fb10448b326f33136b6bed2b7411015d86f41bd2e3e07271219b",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v3\\inspect_case_key.png": "f622861b439a9581ee66e563891c0b196f498c2feccebffcfeff8db9a2e0683b",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v3\\inspect_evaluation.png": "58fe12fe5d20d23c846b1e60009fe9a2d566c58513545dc57a7fb86097469eee",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v3\\inspect_network.png": "687f92c4b780e695a679ce0f992c40859b067617e98b5be59ceaf2c9cd39fc4a",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v3\\layout.json": "5f1b04f9c7cfbdfb843171f2434ae03bb5f6b84b633a70a954e74164dfe5cbfa",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v3\\legend.md": "84851133242379c6fb5752e34fdcdc8f503cad66d50c87f5d179dfc49245ba4d",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v3\\README.md": "f7624d892c8b26990be43e1fbdeaf19ec97c940093d7f6737caf158e268548ae",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v3\\unified_architecture.pdf": "dd7659a730a7a65c4b9260b653c8fa65a6f3be9d66fdfc68c5195e62f2f9b869",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v3\\unified_architecture.png": "5c5d18c17728ba3f2d587cd9b4f7b544455873797bed3407c9d8525d155702b1",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v3\\unified_architecture.svg": "d6476375fa438f2a301e5de6aab015efec54be94f909d66b481d5d92819baae1",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v3\\unified_architecture_defense.pdf": "3e60713091570d580b683fb79924b293865261636c4fb7ed37152cec752632c7",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v3\\unified_architecture_defense.png": "2503b2c6fae320143bc4639f17489471891686f3fb4e598d3d1d545843f2f494",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_landscape_v3\\unified_architecture_defense.svg": "ae459227fad0ccebcf4d207653207d28d593996df811c84cd334fcbbdf4f527d",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v1\\checks.json": "6347e047b769340941a01fac5e508f3f439481fc9f071032e6a78155b4d157c1",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v1\\full_inspection.png": "3be94da737a8031e5a86091cb0c8c08562a4182fc6a0c430a02bef6a2371cea9",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v1\\inspect_benchmark.png": "54537e2fd5a7771750ed7ae11323b657be40fc896dff28e388b1f08662d34c68",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v1\\inspect_evaluation.png": "e4ff13bbf240787882887df96c4531886eeefbcc3bddc7df5f961f70c7c0ffcd",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v1\\inspect_proposed.png": "b04b062a2377726f366abe0c255786537fc0b676481383abc45e33656bb65f2a",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v1\\layout.json": "d4b4b29eb2950d580d7b316ed26f08d3d073d551b338f36dcb29bb7b437980ac",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v1\\PREVIEW_REVIEW.md": "387b5ee7942d1c0ac89510f644b43c8fc074d8e6359148bcaa719fbdb438b2c1",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v1\\unified_architecture.pdf": "e22f99f1e61fa209ed59d315ea53a603697aa00b1f71074b32221ec0a22c89f0",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v1\\unified_architecture.png": "899b621004d8e98052fb03ff00228a3475d3240ada86bb05d4502113aab187a3",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v1\\unified_architecture.svg": "ae2720609279e5a23cbbc85db4766503950029223fb50c37ad5a5ca5dc67096e",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v1\\unified_architecture_defense.pdf": "ad2000b653e30f874dbb814b055d6d49181b38e453c4462e5c70c87ff36d3add",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v2\\checks.json": "7e78a042257d7736cd31aac276a1767ef4b436777417e85895a4ff4f371d2bc3",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v2\\inspect_evaluation.png": "7d013f078819934743f154b238f911773d6ed8f13fc9991723a89ab938ef1c57",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v2\\inspect_inputs.png": "d692514b7980e13155a2599b0ebfe99f3856df399bd8731b32d093d90eb7ce87",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v2\\inspect_models.png": "0ef3411ccbd128f7dc683182995226c5666335bcc7e1ede5e34cd79662bb1822",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v2\\layout.json": "d181e313847be0f365db387bff23bc366666ed09885d8e4d764dbd8bf5ce6f0d",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v2\\PREVIEW_REVIEW.md": "7b237beacd57b0ba210cafc7dffb586679f53847a8d84dd4b0b6058d2a283881",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v2\\unified_architecture.pdf": "e5a7cb033e0ff1cb82b8a814ef2bb5793f0d8d2b08011ff26273874c982cfe35",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v2\\unified_architecture.png": "d142142991ddd977e8bbc88a295c6f2c68f193fc2e22863fe1db7684aa3c5b57",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v2\\unified_architecture.svg": "5c186bb1523cfc345f7f9d0150ed3d0675f93c6d8fba57e09765c40cc906a5f3",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v2\\unified_architecture_defense.pdf": "42e832df87a5fa62c7c2bbf34884a6ac02086f7402a42f29626abb9295182e7d",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v2\\unified_architecture_defense.png": "57d5d5da4bc4d5202aea19d91b7754951adf8effbc8441a8bf43fe36d27541c1",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v3\\build_stdout.json": "c8c8f8c835ea3cefce08fc69c4d913136f9a644ca1b939165ba49e3a0efb731c",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v3\\checks.json": "e69b589aa7e53f35c0df37187c0e11a6a3a7f2cd27a40fcd377ad3e7b37a042a",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v3\\full_inspection.png": "d83afcdc74f08652d3aaf3101f13199e4ccd725aedd4a4e3a0b23fe4e93d0cc6",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v3\\inspect_evaluation.png": "3e73af7997376087b32d51d046924b4e01ee0851a6dca69766a3635d148b2eb4",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v3\\inspect_inputs.png": "0e00edbab0913ff11aacf963987745c353eb1eafeebcd827ce3dea156c38724b",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v3\\inspect_models.png": "6430b4781cb81882f6e59e083147e74e93a5654037a3ad7ed77af72d33833210",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v3\\layout.json": "f156a453ef604de5ce80e0644a28e40f4f8e60c7a26b1b6ea8a47dcd3c7a0c99",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v3\\pdf_render_inspection.png": "1f46f1d032e918cfee5f76c8bb6134f67b53767804c1c11bbd759358d2c95485",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v3\\PREVIEW_REVIEW.md": "615225c7965a856c74204082449bb31a8f66cb8cf02b2a13ec7fd059b9d4b2b8",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v3\\semantic_mapping.json": "6d74d5da6f053e0b5d27e7d507be52a790bf6a9799e77d20af1e63c5778551ac",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v3\\unified_architecture.pdf": "0486ca9927653d52e898eafebfb5f5440b3273eb6b0929460678ba8008d70f10",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v3\\unified_architecture.png": "26f48f4f37568e79d24a7b9724e2c49a7270c09d0aaadbf258e7b669a14d3d0d",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v3\\unified_architecture.svg": "5aa7e560575e0ec1bc79262884bb30455a84855e78cb7c3592152a6d54d7b319",
+    "output\\thesis_refresh\\chapter4\\architecture\\preview_v3\\unified_architecture_defense.pdf": "cccaa88d9844ba7ecdb97ac548145784e7a51519fd94a4dd999aa12127f607a6",
+    "output\\thesis_refresh\\chapter4\\architecture\\senior_layout_review\\DS22_page_82.png": "b5fd36db81503064611730a5b6623d4ef3bf0b4138ffc42c09022a2edb320e9f",
+    "output\\thesis_refresh\\chapter4\\architecture\\senior_layout_review\\DS31_page_89.png": "cad6e4bc08410cf441c1bcdde42663ae8da68ceba34dcb3b97dd138bc77ef5c6",
+    "output\\thesis_refresh\\chapter4\\architecture\\senior_layout_review\\DS31_page_90.png": "eade3c7376096f1850d9209b8e6f164c0b034fe8564ee9ae5137162f3b02786d",
+    "output\\thesis_refresh\\chapter4\\architecture\\senior_layout_review\\DS32_page_165.png": "6b1baec90516c17c5afacd322ce7a794fc0bbc43d0428fbf8921187f06dba785",
+    "output\\thesis_refresh\\chapter4\\architecture\\senior_layout_review\\DS9_page_110.png": "5d1aa188bf7140462c2a7af8aa826748a3058636fb0d908a63be582e11c8cfe6",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v1\\case_preparation_inspection.png": "10bdc377fa40b4c7ba9380e9fc32beefe766a80f1efd70a1cddc78f51fb60499",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v1\\checks.json": "26c5b5b26910758d7b663d7f8a8d7c4936a179102e8eb208925ec20350f0037a",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v1\\composite_module4_inspection.png": "ffde1981880df92b618ca817709de6cd9b2b9caabe31f6100633d3e9e116fa1a",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v1\\final_verification.json": "dce2ed635859d16a6c988f07d6f43ec495a312ab41db029e708be91fbd4d3f23",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v1\\layout.json": "957fa7192fb6e00c17b2936dfd937e19269eecb361ee35296607257e0572f9f2",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v1\\model_construction_inspection.png": "d3f958e8e41b47e49a84ebc9686bc59def5905f08592125af62fee7304c6b686",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v1\\MODULE_TABLE.md": "3a8a9fbaeb4cf8ce991a80541719a96783d8c0023a296588fbfbd97879df8b07",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v1\\primary_auxiliary_fork_inspection.png": "4097c785e35730c6ba32bd0e3edbb84378ac9d8d27490e807d7ab4872eb837b5",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v1\\README.md": "da8fae0d05027bb3af344d4d9fb628d445d038c2c2cddaa4d5325a9fa809d5e3",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v1\\source_audit_partition_inspection.png": "bb99888410edc3cc4a8da1f623d8059b8989f420eba1e202f149dfa5477ccfc9",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v1\\SPACING_REVIEW.md": "92bf1653611ca1f47af0104a22e4f2fc9a3d61030938bea28d7ba7dd1c3ddcac",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v1\\spacious_master.pdf": "a3f967a0ec31b451ad554a07d00a47133e71ea27b3a83a12365fe91db9ef2114",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v1\\spacious_master.png": "afa0301d3eaee035cb0974d26e1c81ba31fbe82c1b308709df5005ab8f6c2a96",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v1\\spacious_master.svg": "1f96ef0b0bdd63359f77b5ee6479819b12e7aa3bae0b68d082ac5c9d724128a1",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v1\\split_evaluation_inspection.png": "314fc16850c0b89ca828013022307ff2017bde5eb65328d51d8ecd14fd59b3a8",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v1\\training_selection_inspection.png": "5dc403416fd3f7a47edc7765b2cf50ae5fee4668adb9d734344e61f96c9bb111",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v1\\whole_view_proof.png": "9c0f8d1f5ecf7ee4ae357bbe5a6f594c4d166e5c6f2e9a78e9393441c55a8fb6",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v2\\case_preparation_inspection.png": "fce032fa8af16f8bbf21f4ddadbb91785bcd63a58b57ade7e8732af32dc13c6e",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v2\\checks.json": "acbc7c67b9362ce8525f9de2c3dca50f0553a25a2d517470e94c01d2d2d6b06f",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v2\\composite_module4_inspection.png": "0e01babcb433ae0def7ffb22cb2be0843721a5ed3830e9af355debb71a5f6e1d",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v2\\layout.json": "7a264d6a165229a97451baf67dba0a722541475de461e5e86b1f4bed6f078f92",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v2\\model_construction_inspection.png": "fbd3d98b69e29fadea1f85ca27cebe6f93aa6eb040493eb52a035ada1f75d7dd",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v2\\MODULE_TABLE.md": "3a8a9fbaeb4cf8ce991a80541719a96783d8c0023a296588fbfbd97879df8b07",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v2\\primary_auxiliary_fork_inspection.png": "f8624150b2bb4a89c1dd448b85b062081b56deaf816e1d9a46354c56c4ac9179",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v2\\source_audit_partition_inspection.png": "e83aa6523ab67b9c767ebb1e894ad42ddc6c6a445dac51513ffabb1007eda042",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v2\\SPACING_REVIEW.md": "20dce799bdcc8e23a32b57fdc858bb5241aa69f570235f045fd84ae9226b4028",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v2\\spacious_master.pdf": "e3b50e396d4cf23bc9c5cf2372091e0923c34458e3a0ba5a69b9a4bfa07c4f5d",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v2\\spacious_master.png": "dd4c9f8f97334f7ddd6e2d8e6a5c8220d8dc6d95b50a138dc1c1f01709e07ba8",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v2\\spacious_master.svg": "3d61dab8898cfef071feacc02dc3800fe9f6f669748b4490a4fcc41eb694574c",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v2\\split_evaluation_inspection.png": "de32641f17842aaba6b5eebe95458df53ee199522fb8ce27421a132becc3c7f5",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v2\\training_selection_inspection.png": "7c5ec8e53ac60aa931ccabb84b0b9c646b1e05194c7234b859295f4e9216a38e",
+    "output\\thesis_refresh\\chapter4\\architecture\\spacious_master_v2\\whole_view_proof.png": "22628cdde8e34be2bfa3fc9d56eec6b0a922f9179a5df2a5d1754f245ab32632",
+    "output\\thesis_refresh\\chapter4\\architecture\\centered_input_overview_v1\\checks\\final_verification.json": "493d7f116d2f434874c72104e5583c4a0a3ed6165e17fa27a0e07523669b9188",
+    "output\\thesis_refresh\\chapter4\\architecture\\centered_input_overview_v1\\checks\\layout_checks.json": "a9c5b3753aeae59a423fca0ad74ca7994665978f96cf5125e45f7cdc18c1eea0",
+    "output\\thesis_refresh\\chapter4\\architecture\\centered_input_overview_v1\\checks\\semantic_projection.json": "70a8f0b02e7151737f4be3375cc7a1222017301002d411000627550718a40626",
+    "output\\thesis_refresh\\chapter4\\architecture\\clean_model_overview_v1\\checks\\current_methods_readonly.txt": "8cb1407acaea77ebd5eccb8126f482ee8d5b020d071b69d042df42ebbb091545",
+    "output\\thesis_refresh\\chapter4\\architecture\\clean_model_overview_v1\\checks\\final_verification.json": "0ead6257af4c60359ba01c8dd794a1ed254dc5502c0fd4a9445ae338d510afd1",
+    "output\\thesis_refresh\\chapter4\\architecture\\clean_model_overview_v1\\checks\\layout_checks.json": "587a8f95113c4325813a2a30c4f8a9b671ea6fcd808ba21cd279375d46351af7",
+    "output\\thesis_refresh\\chapter4\\architecture\\clean_model_overview_v1\\checks\\semantic_projection.json": "84359108cd9174d56a7821e0271e425c9d1bf729885f640ecd9efb3498cf5b5a",
+    "output\\thesis_refresh\\tools\\build_spacious_master_v2.py": "52c01ce8113eae54e5d2ca240bf677f4bc0020ebedef8bde64515faf24423423"
+  },
+  "visual_approval": false,
+  "shape_fit_measurements": [
+    {
+      "id": "source",
+      "actual_pdf_glyph_bounds": [],
+      "label_union": [
+        321.491943359375,
+        31.35546875,
+        398.508056640625,
+        58.64453125
+      ],
+      "padding_points": {
+        "left": 76.491943359375,
+        "top": 13.35546875,
+        "right": 76.491943359375,
+        "bottom": 13.35546875
+      },
+      "outline": [
+        [
+          245,
+          18
+        ],
+        [
+          475,
+          18
+        ],
+        [
+          475,
+          72
+        ],
+        [
+          245,
+          72
+        ]
+      ],
+      "ellipses": [
+        {
+          "center": [
+            360.0,
+            24
+          ],
+          "radii": [
+            115.0,
+            6
+          ]
+        },
+        {
+          "center": [
+            360.0,
+            66
+          ],
+          "radii": [
+            115.0,
+            6
+          ]
+        }
+      ]
+    },
+    {
+      "id": "audit",
+      "actual_pdf_glyph_bounds": [],
+      "label_union": [
+        283.87548828125,
+        138.35546875,
+        436.12451171875,
+        165.64453125
+      ],
+      "padding_points": {
+        "left": 41.87548828125,
+        "top": 8.35546875,
+        "right": 41.87548828125,
+        "bottom": 8.35546875
+      },
+      "outline": [
+        [
+          242,
+          130
+        ],
+        [
+          478,
+          130
+        ],
+        [
+          478,
+          174
+        ],
+        [
+          242,
+          174
+        ]
+      ],
+      "ellipses": []
+    },
+    {
+      "id": "manifest",
+      "actual_pdf_glyph_bounds": [],
+      "label_union": [
+        276.240478515625,
+        262.35546875,
+        443.759521484375,
+        289.64453125
+      ],
+      "padding_points": {
+        "left": 34.240478515625,
+        "top": 8.35546875,
+        "right": 34.240478515625,
+        "bottom": 8.35546875
+      },
+      "outline": [
+        [
+          242,
+          254
+        ],
+        [
+          468,
+          254
+        ],
+        [
+          478,
+          264
+        ],
+        [
+          478,
+          298
+        ],
+        [
+          242,
+          298
+        ]
+      ],
+      "ellipses": []
+    },
+    {
+      "id": "train",
+      "actual_pdf_glyph_bounds": [
+        [
+          351.236572265625,
+          347.3584899902344,
+          378.74755859375,
+          359.6344909667969
+        ]
+      ],
+      "label_union": [
+        336.2646484375,
+        332.35546875,
+        393.7353515625,
+        359.64453125
+      ],
+      "padding_points": {
+        "left": 36.2646484375,
+        "top": 8.35546875,
+        "right": 36.2646484375,
+        "bottom": 8.35546875
+      },
+      "outline": [
+        [
+          308,
+          324
+        ],
+        [
+          430,
+          324
+        ],
+        [
+          422,
+          368
+        ],
+        [
+          300,
+          368
+        ]
+      ],
+      "ellipses": []
+    },
+    {
+      "id": "val",
+      "actual_pdf_glyph_bounds": [
+        [
+          495.588134765625,
+          347.3584899902344,
+          538.4002685546875,
+          359.6344909667969
+        ]
+      ],
+      "label_union": [
+        483.978515625,
+        332.35546875,
+        550.021484375,
+        359.64453125
+      ],
+      "padding_points": {
+        "left": 31.978515625,
+        "top": 8.35546875,
+        "right": 31.978515625,
+        "bottom": 8.35546875
+      },
+      "outline": [
+        [
+          460,
+          324
+        ],
+        [
+          582,
+          324
+        ],
+        [
+          574,
+          368
+        ],
+        [
+          452,
+          368
+        ]
+      ],
+      "ellipses": []
+    },
+    {
+      "id": "test",
+      "actual_pdf_glyph_bounds": [
+        [
+          630.588134765625,
+          347.3584899902344,
+          673.4003295898438,
+          359.6344909667969
+        ]
+      ],
+      "label_union": [
+        630.588134765625,
+        332.35546875,
+        673.411865234375,
+        359.64453125
+      ],
+      "padding_points": {
+        "left": 26.588134765625,
+        "top": 8.35546875,
+        "right": 26.588134765625,
+        "bottom": 8.35546875
+      },
+      "outline": [
+        [
+          612,
+          324
+        ],
+        [
+          700,
+          324
+        ],
+        [
+          692,
+          368
+        ],
+        [
+          604,
+          368
+        ]
+      ],
+      "ellipses": []
+    },
+    {
+      "id": "pt",
+      "actual_pdf_glyph_bounds": [],
+      "label_union": [
+        312.5673828125,
+        438.35546875,
+        417.4326171875,
+        465.64453125
+      ],
+      "padding_points": {
+        "left": 12.5673828125,
+        "top": 8.35546875,
+        "right": 12.5673828125,
+        "bottom": 8.35546875
+      },
+      "outline": [
+        [
+          300,
+          430
+        ],
+        [
+          430,
+          430
+        ],
+        [
+          430,
+          474
+        ],
+        [
+          300,
+          474
+        ]
+      ],
+      "ellipses": []
+    },
+    {
+      "id": "pv",
+      "actual_pdf_glyph_bounds": [
+        [
+          485.216552734375,
+          453.3584899902344,
+          548.7526245117188,
+          465.6344909667969
+        ]
+      ],
+      "label_union": [
+        464.5673828125,
+        438.35546875,
+        569.4326171875,
+        465.64453125
+      ],
+      "padding_points": {
+        "left": 12.5673828125,
+        "top": 8.35546875,
+        "right": 12.5673828125,
+        "bottom": 8.35546875
+      },
+      "outline": [
+        [
+          452,
+          430
+        ],
+        [
+          582,
+          430
+        ],
+        [
+          582,
+          474
+        ],
+        [
+          452,
+          474
+        ]
+      ],
+      "ellipses": []
+    },
+    {
+      "id": "prep",
+      "actual_pdf_glyph_bounds": [
+        [
+          620.216552734375,
+          460.8584899902344,
+          683.7527465820312,
+          473.1344909667969
+        ]
+      ],
+      "label_union": [
+        616.988525390625,
+        430.85546875,
+        687.011474609375,
+        473.14453125
+      ],
+      "padding_points": {
+        "left": 18.988525390625,
+        "top": 8.85546875,
+        "right": 18.988525390625,
+        "bottom": 8.85546875
+      },
+      "outline": [
+        [
+          598,
+          422
+        ],
+        [
+          706,
+          422
+        ],
+        [
+          706,
+          482
+        ],
+        [
+          598,
+          482
+        ]
+      ],
+      "ellipses": []
+    },
+    {
+      "id": "choice",
+      "actual_pdf_glyph_bounds": [],
+      "label_union": [
+        133.07080078125,
+        608.85546875,
+        200.92919921875,
+        621.14453125
+      ],
+      "padding_points": {
+        "left": 48.07080078125,
+        "top": 15.85546875,
+        "right": 48.07080078125,
+        "bottom": 15.85546875
+      },
+      "outline": [
+        [
+          167.0,
+          593
+        ],
+        [
+          249,
+          615.0
+        ],
+        [
+          167.0,
+          637
+        ],
+        [
+          85,
+          615.0
+        ]
+      ],
+      "ellipses": []
+    },
+    {
+      "id": "be",
+      "actual_pdf_glyph_bounds": [
+        [
+          81.3662109375,
+          709.8584594726562,
+          148.60919189453125,
+          722.1344604492188
+        ],
+        [
+          81.3662109375,
+          941.3584594726562,
+          148.60919189453125,
+          953.6344604492188
+        ]
+      ],
+      "label_union": [
+        81.3662109375,
+        709.85546875,
+        148.6337890625,
+        722.14453125
+      ],
+      "padding_points": {
+        "left": 9.3662109375,
+        "top": 10.85546875,
+        "right": 9.3662109375,
+        "bottom": 10.85546875
+      },
+      "outline": [
+        [
+          72,
+          699
+        ],
+        [
+          158,
+          699
+        ],
+        [
+          158,
+          733
+        ],
+        [
+          72,
+          733
+        ]
+      ],
+      "ellipses": []
+    },
+    {
+      "id": "ba",
+      "actual_pdf_glyph_bounds": [
+        [
+          204.93310546875,
+          697.8584594726562,
+          233.04910278320312,
+          710.1344604492188
+        ],
+        [
+          197.899658203125,
+          712.8584594726562,
+          240.06263732910156,
+          725.1344604492188
+        ]
+      ],
+      "label_union": [
+        185.2158203125,
+        697.85546875,
+        252.7841796875,
+        740.14453125
+      ],
+      "padding_points": {
+        "left": 7.2158203125,
+        "top": 8.85546875,
+        "right": 7.2158203125,
+        "bottom": 8.85546875
+      },
+      "outline": [
+        [
+          178,
+          689
+        ],
+        [
+          260,
+          689
+        ],
+        [
+          260,
+          749
+        ],
+        [
+          178,
+          749
+        ]
+      ],
+      "ellipses": []
+    },
+    {
+      "id": "bf",
+      "actual_pdf_glyph_bounds": [],
+      "label_union": [
+        185.37158203125,
+        763.85546875,
+        252.62841796875,
+        776.14453125
+      ],
+      "padding_points": {
+        "left": 7.37158203125,
+        "top": 10.85546875,
+        "right": 7.37158203125,
+        "bottom": 10.85546875
+      },
+      "outline": [
+        [
+          178,
+          753
+        ],
+        [
+          260,
+          753
+        ],
+        [
+          260,
+          787
+        ],
+        [
+          178,
+          787
+        ]
+      ],
+      "ellipses": []
+    },
+    {
+      "id": "bh",
+      "actual_pdf_glyph_bounds": [],
+      "label_union": [
+        133.292724609375,
+        805.35546875,
+        198.707275390625,
+        832.64453125
+      ],
+      "padding_points": {
+        "left": 61.292724609375,
+        "top": 8.35546875,
+        "right": 61.292724609375,
+        "bottom": 8.35546875
+      },
+      "outline": [
+        [
+          72,
+          797
+        ],
+        [
+          260,
+          797
+        ],
+        [
+          260,
+          841
+        ],
+        [
+          72,
+          841
+        ]
+      ],
+      "ellipses": []
+    },
+    {
+      "id": "pe",
+      "actual_pdf_glyph_bounds": [
+        [
+          81.3662109375,
+          709.8584594726562,
+          148.60919189453125,
+          722.1344604492188
+        ],
+        [
+          81.3662109375,
+          941.3584594726562,
+          148.60919189453125,
+          953.6344604492188
+        ]
+      ],
+      "label_union": [
+        81.3662109375,
+        941.35546875,
+        148.6337890625,
+        968.64453125
+      ],
+      "padding_points": {
+        "left": 9.3662109375,
+        "top": 9.35546875,
+        "right": 9.3662109375,
+        "bottom": 9.35546875
+      },
+      "outline": [
+        [
+          72,
+          932
+        ],
+        [
+          158,
+          932
+        ],
+        [
+          158,
+          978
+        ],
+        [
+          72,
+          978
+        ]
+      ],
+      "ellipses": []
+    },
+    {
+      "id": "cbam",
+      "actual_pdf_glyph_bounds": [
+        [
+          203.109619140625,
+          938.8584594726562,
+          234.8666229248047,
+          951.1344604492188
+        ]
+      ],
+      "label_union": [
+        203.109619140625,
+        938.85546875,
+        234.890380859375,
+        951.14453125
+      ],
+      "padding_points": {
+        "left": 25.109619140625,
+        "top": 10.85546875,
+        "right": 25.109619140625,
+        "bottom": 10.85546875
+      },
+      "outline": [
+        [
+          178,
+          928
+        ],
+        [
+          260,
+          928
+        ],
+        [
+          260,
+          962
+        ],
+        [
+          178,
+          962
+        ]
+      ],
+      "ellipses": []
+    },
+    {
+      "id": "ph",
+      "actual_pdf_glyph_bounds": [],
+      "label_union": [
+        186.292724609375,
+        997.35546875,
+        251.707275390625,
+        1024.64453125
+      ],
+      "padding_points": {
+        "left": 8.292724609375,
+        "top": 11.35546875,
+        "right": 8.292724609375,
+        "bottom": 11.35546875
+      },
+      "outline": [
+        [
+          178,
+          986
+        ],
+        [
+          260,
+          986
+        ],
+        [
+          260,
+          1036
+        ],
+        [
+          178,
+          1036
+        ]
+      ],
+      "ellipses": []
+    },
+    {
+      "id": "pool",
+      "actual_pdf_glyph_bounds": [
+        [
+          81.368896484375,
+          1022.3584594726562,
+          148.6008758544922,
+          1034.634521484375
+        ]
+      ],
+      "label_union": [
+        81.368896484375,
+        1007.35546875,
+        148.631103515625,
+        1034.64453125
+      ],
+      "padding_points": {
+        "left": 9.368896484375,
+        "top": 9.35546875,
+        "right": 9.368896484375,
+        "bottom": 9.35546875
+      },
+      "outline": [
+        [
+          72,
+          998
+        ],
+        [
+          158,
+          998
+        ],
+        [
+          158,
+          1044
+        ],
+        [
+          72,
+          1044
+        ]
+      ],
+      "ellipses": []
+    },
+    {
+      "id": "aux",
+      "actual_pdf_glyph_bounds": [],
+      "label_union": [
+        103.638916015625,
+        1069.85546875,
+        228.361083984375,
+        1082.14453125
+      ],
+      "padding_points": {
+        "left": 31.638916015625,
+        "top": 11.85546875,
+        "right": 31.638916015625,
+        "bottom": 11.85546875
+      },
+      "outline": [
+        [
+          72,
+          1058
+        ],
+        [
+          260,
+          1058
+        ],
+        [
+          260,
+          1094
+        ],
+        [
+          72,
+          1094
+        ]
+      ],
+      "ellipses": []
+    },
+    {
+      "id": "fit",
+      "actual_pdf_glyph_bounds": [
+        [
+          375.761962890625,
+          671.8584594726562,
+          422.21490478515625,
+          684.1344604492188
+        ]
+      ],
+      "label_union": [
+        369.961181640625,
+        641.85546875,
+        428.038818359375,
+        684.14453125
+      ],
+      "padding_points": {
+        "left": 29.961181640625,
+        "top": 13.85546875,
+        "right": 29.961181640625,
+        "bottom": 13.85546875
+      },
+      "outline": [
+        [
+          340,
+          628
+        ],
+        [
+          458,
+          628
+        ],
+        [
+          458,
+          698
+        ],
+        [
+          340,
+          698
+        ]
+      ],
+      "ellipses": []
+    },
+    {
+      "id": "selected",
+      "actual_pdf_glyph_bounds": [],
+      "label_union": [
+        355.582763671875,
+        737.85546875,
+        442.417236328125,
+        780.14453125
+      ],
+      "padding_points": {
+        "left": 15.582763671875,
+        "top": 9.85546875,
+        "right": 15.582763671875,
+        "bottom": 9.85546875
+      },
+      "outline": [
+        [
+          340,
+          728
+        ],
+        [
+          448,
+          728
+        ],
+        [
+          458,
+          738
+        ],
+        [
+          458,
+          790
+        ],
+        [
+          340,
+          790
+        ]
+      ],
+      "ellipses": []
+    },
+    {
+      "id": "testdata",
+      "actual_pdf_glyph_bounds": [],
+      "label_union": [
+        593.4423828125,
+        598.85546875,
+        706.5576171875,
+        611.14453125
+      ],
+      "padding_points": {
+        "left": 53.4423828125,
+        "top": 18.85546875,
+        "right": 53.4423828125,
+        "bottom": 18.85546875
+      },
+      "outline": [
+        [
+          548,
+          580
+        ],
+        [
+          760,
+          580
+        ],
+        [
+          752,
+          630
+        ],
+        [
+          540,
+          630
+        ]
+      ],
+      "ellipses": []
+    },
+    {
+      "id": "predict",
+      "actual_pdf_glyph_bounds": [
+        [
+          572.6884765625,
+          703.8584594726562,
+          617.2825927734375,
+          716.1344604492188
+        ]
+      ],
+      "label_union": [
+        558.927734375,
+        688.85546875,
+        631.072265625,
+        731.14453125
+      ],
+      "padding_points": {
+        "left": 18.927734375,
+        "top": 8.85546875,
+        "right": 18.927734375,
+        "bottom": 8.85546875
+      },
+      "outline": [
+        [
+          540,
+          680
+        ],
+        [
+          650,
+          680
+        ],
+        [
+          650,
+          740
+        ],
+        [
+          540,
+          740
+        ]
+      ],
+      "ellipses": []
+    },
+    {
+      "id": "evaluate",
+      "actual_pdf_glyph_bounds": [
+        [
+          577.278076171875,
+          798.8584594726562,
+          612.7091674804688,
+          811.1344604492188
+        ],
+        [
+          568.70849609375,
+          813.8584594726562,
+          621.2667236328125,
+          826.1344604492188
+        ]
+      ],
+      "label_union": [
+        552.82080078125,
+        798.85546875,
+        637.17919921875,
+        841.14453125
+      ],
+      "padding_points": {
+        "left": 12.82080078125,
+        "top": 8.85546875,
+        "right": 12.82080078125,
+        "bottom": 8.85546875
+      },
+      "outline": [
+        [
+          540,
+          790
+        ],
+        [
+          650,
+          790
+        ],
+        [
+          650,
+          850
+        ],
+        [
+          540,
+          850
+        ]
+      ],
+      "ellipses": []
+    },
+    {
+      "id": "sample",
+      "actual_pdf_glyph_bounds": [
+        [
+          688.39697265625,
+          703.8584594726562,
+          741.5821533203125,
+          716.1344604492188
+        ]
+      ],
+      "label_union": [
+        677.39697265625,
+        688.85546875,
+        752.60302734375,
+        731.14453125
+      ],
+      "padding_points": {
+        "left": 7.39697265625,
+        "top": 8.85546875,
+        "right": 7.39697265625,
+        "bottom": 8.85546875
+      },
+      "outline": [
+        [
+          670,
+          680
+        ],
+        [
+          760,
+          680
+        ],
+        [
+          760,
+          740
+        ],
+        [
+          670,
+          740
+        ]
+      ],
+      "ellipses": []
+    },
+    {
+      "id": "grad",
+      "actual_pdf_glyph_bounds": [
+        [
+          689.0146484375,
+          911.3584594726562,
+          740.94580078125,
+          923.6344604492188
+        ]
+      ],
+      "label_union": [
+        688.71923828125,
+        911.35546875,
+        741.28076171875,
+        938.64453125
+      ],
+      "padding_points": {
+        "left": 18.71923828125,
+        "top": 11.35546875,
+        "right": 18.71923828125,
+        "bottom": 11.35546875
+      },
+      "outline": [
+        [
+          670,
+          900
+        ],
+        [
+          760,
+          900
+        ],
+        [
+          760,
+          950
+        ],
+        [
+          670,
+          950
+        ]
+      ],
+      "ellipses": []
+    },
+    {
+      "id": "results",
+      "actual_pdf_glyph_bounds": [
+        [
+          695.660400390625,
+          1011.3584594726562,
+          732.323486328125,
+          1023.6344604492188
+        ]
+      ],
+      "label_union": [
+        669.068115234375,
+        1011.35546875,
+        758.931884765625,
+        1038.64453125
+      ],
+      "padding_points": {
+        "left": 9.068115234375,
+        "top": 11.35546875,
+        "right": 9.068115234375,
+        "bottom": 11.35546875
+      },
+      "outline": [
+        [
+          668,
+          1000
+        ],
+        [
+          768,
+          1000
+        ],
+        [
+          760,
+          1050
+        ],
+        [
+          660,
+          1050
+        ]
+      ],
+      "ellipses": []
+    }
+  ],
+  "embedded_fonts": true,
+  "module_BBOX_native_points": {
+    "M1": [
+      222,
+      92,
+      498,
+      184
+    ],
+    "M2": [
+      222,
+      204,
+      498,
+      310
+    ],
+    "M3": [
+      18,
+      388,
+      718,
+      498
+    ],
+    "M4": [
+      18,
+      516,
+      490,
+      1134
+    ],
+    "4A": [
+      36,
+      556,
+      298,
+      1116
+    ],
+    "4B": [
+      326,
+      556,
+      472,
+      1116
+    ],
+    "M5": [
+      518,
+      516,
+      774,
+      1070
+    ]
+  },
+  "visual_inspection_completed": true,
+  "checkpoint_route_policy": "Dedicated perimeter lane; never test payload or image wrapper. Longer than requested short gutter.",
+  "node_count": 29,
+  "edge_count": 34,
+  "semantic_graph_identical_to_v2": true,
+  "main_frame_geometry_identical": true,
+  "module_table_byte_identical": true,
+  "minimum_node_text_padding_pt": 7.2158203125,
+  "all_arrows_solid": true,
+  "dashed_frames_only": [
+    "4A",
+    "4B"
+  ],
+  "no_mojibake": true
+}

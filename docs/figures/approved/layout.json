@@ -1,0 +1,2876 @@
+{
+  "page_points": [
+    792,
+    1224
+  ],
+  "page_inches": [
+    11.0,
+    17.0
+  ],
+  "nodes": {
+    "source": {
+      "bbox": [
+        245,
+        18,
+        475,
+        72
+      ],
+      "outline": [
+        [
+          245,
+          18
+        ],
+        [
+          475,
+          18
+        ],
+        [
+          475,
+          72
+        ],
+        [
+          245,
+          72
+        ]
+      ],
+      "lines": [
+        "TMJ image files",
+        "3,425 files"
+      ],
+      "shape": "storage",
+      "container": false,
+      "contract_nodes": [
+        "source"
+      ]
+    },
+    "audit": {
+      "bbox": [
+        242,
+        130,
+        478,
+        174
+      ],
+      "outline": [
+        [
+          242,
+          130
+        ],
+        [
+          478,
+          130
+        ],
+        [
+          478,
+          174
+        ],
+        [
+          242,
+          174
+        ]
+      ],
+      "lines": [
+        "Deduplicate & exclude conflicts",
+        "3,002 retained images"
+      ],
+      "shape": "process",
+      "container": false,
+      "contract_nodes": [
+        "audit",
+        "pool"
+      ]
+    },
+    "manifest": {
+      "bbox": [
+        242,
+        254,
+        478,
+        298
+      ],
+      "outline": [
+        [
+          242,
+          254
+        ],
+        [
+          468,
+          254
+        ],
+        [
+          478,
+          264
+        ],
+        [
+          478,
+          298
+        ],
+        [
+          242,
+          298
+        ]
+      ],
+      "lines": [
+        "Five-fold partitions",
+        "Seed 42 \u00b7 same split across cases"
+      ],
+      "shape": "document",
+      "container": false,
+      "contract_nodes": [
+        "folds"
+      ]
+    },
+    "train": {
+      "bbox": [
+        300,
+        324,
+        430,
+        368
+      ],
+      "outline": [
+        [
+          308,
+          324
+        ],
+        [
+          430,
+          324
+        ],
+        [
+          422,
+          368
+        ],
+        [
+          300,
+          368
+        ]
+      ],
+      "lines": [
+        "Training set",
+        "2,058"
+      ],
+      "shape": "data",
+      "container": false,
+      "contract_nodes": [
+        "train"
+      ]
+    },
+    "val": {
+      "bbox": [
+        452,
+        324,
+        582,
+        368
+      ],
+      "outline": [
+        [
+          460,
+          324
+        ],
+        [
+          582,
+          324
+        ],
+        [
+          574,
+          368
+        ],
+        [
+          452,
+          368
+        ]
+      ],
+      "lines": [
+        "Validation set",
+        "343\u2013344"
+      ],
+      "shape": "data",
+      "container": false,
+      "contract_nodes": [
+        "val"
+      ]
+    },
+    "test": {
+      "bbox": [
+        604,
+        324,
+        700,
+        368
+      ],
+      "outline": [
+        [
+          612,
+          324
+        ],
+        [
+          700,
+          324
+        ],
+        [
+          692,
+          368
+        ],
+        [
+          604,
+          368
+        ]
+      ],
+      "lines": [
+        "Test set",
+        "600\u2013601"
+      ],
+      "shape": "data",
+      "container": false,
+      "contract_nodes": [
+        "test"
+      ]
+    },
+    "pt": {
+      "bbox": [
+        300,
+        430,
+        430,
+        474
+      ],
+      "outline": [
+        [
+          300,
+          430
+        ],
+        [
+          430,
+          430
+        ],
+        [
+          430,
+          474
+        ],
+        [
+          300,
+          474
+        ]
+      ],
+      "lines": [
+        "224\u00d7224 RGB \u00b7 [-1,1]",
+        "Training-only flip"
+      ],
+      "shape": "process",
+      "container": false,
+      "contract_nodes": [
+        "pt"
+      ]
+    },
+    "pv": {
+      "bbox": [
+        452,
+        430,
+        582,
+        474
+      ],
+      "outline": [
+        [
+          452,
+          430
+        ],
+        [
+          582,
+          430
+        ],
+        [
+          582,
+          474
+        ],
+        [
+          452,
+          474
+        ]
+      ],
+      "lines": [
+        "224\u00d7224 RGB \u00b7 [-1,1]",
+        "Deterministic"
+      ],
+      "shape": "process",
+      "container": false,
+      "contract_nodes": [
+        "pv"
+      ]
+    },
+    "prep": {
+      "bbox": [
+        598,
+        422,
+        706,
+        482
+      ],
+      "outline": [
+        [
+          598,
+          422
+        ],
+        [
+          706,
+          422
+        ],
+        [
+          706,
+          482
+        ],
+        [
+          598,
+          482
+        ]
+      ],
+      "lines": [
+        "224\u00d7224 RGB",
+        "Scale [-1,1]",
+        "Deterministic"
+      ],
+      "shape": "process",
+      "container": false,
+      "contract_nodes": [
+        "pe"
+      ]
+    },
+    "choice": {
+      "bbox": [
+        85,
+        593,
+        249,
+        637
+      ],
+      "outline": [
+        [
+          167.0,
+          593
+        ],
+        [
+          249,
+          615.0
+        ],
+        [
+          167.0,
+          637
+        ],
+        [
+          85,
+          615.0
+        ]
+      ],
+      "lines": [
+        "Model family?"
+      ],
+      "shape": "choice",
+      "container": false,
+      "contract_nodes": [
+        "router"
+      ]
+    },
+    "benchmark": {
+      "bbox": [
+        58,
+        663,
+        276,
+        853
+      ],
+      "outline": [
+        [
+          58,
+          663
+        ],
+        [
+          276,
+          663
+        ],
+        [
+          276,
+          853
+        ],
+        [
+          58,
+          853
+        ]
+      ],
+      "lines": [
+        "Benchmark (C1, C2)"
+      ],
+      "shape": "process",
+      "container": true,
+      "contract_nodes": [
+        "be",
+        "ba",
+        "bd",
+        "bp",
+        "bc",
+        "bf",
+        "bh"
+      ]
+    },
+    "be": {
+      "bbox": [
+        72,
+        699,
+        158,
+        733
+      ],
+      "outline": [
+        [
+          72,
+          699
+        ],
+        [
+          158,
+          699
+        ],
+        [
+          158,
+          733
+        ],
+        [
+          72,
+          733
+        ]
+      ],
+      "lines": [
+        "DenseNet201"
+      ],
+      "shape": "process",
+      "container": false,
+      "contract_nodes": [
+        "be"
+      ]
+    },
+    "ba": {
+      "bbox": [
+        178,
+        689,
+        260,
+        749
+      ],
+      "outline": [
+        [
+          178,
+          689
+        ],
+        [
+          260,
+          689
+        ],
+        [
+          260,
+          749
+        ],
+        [
+          178,
+          749
+        ]
+      ],
+      "lines": [
+        "Pool3",
+        "attention",
+        "Pool + project"
+      ],
+      "shape": "process",
+      "container": false,
+      "contract_nodes": [
+        "ba",
+        "bd",
+        "bp"
+      ]
+    },
+    "bf": {
+      "bbox": [
+        178,
+        753,
+        260,
+        787
+      ],
+      "outline": [
+        [
+          178,
+          753
+        ],
+        [
+          260,
+          753
+        ],
+        [
+          260,
+          787
+        ],
+        [
+          178,
+          787
+        ]
+      ],
+      "lines": [
+        "Fuse features"
+      ],
+      "shape": "process",
+      "container": false,
+      "contract_nodes": [
+        "bc",
+        "bf"
+      ]
+    },
+    "bh": {
+      "bbox": [
+        72,
+        797,
+        260,
+        841
+      ],
+      "outline": [
+        [
+          72,
+          797
+        ],
+        [
+          260,
+          797
+        ],
+        [
+          260,
+          841
+        ],
+        [
+          72,
+          841
+        ]
+      ],
+      "lines": [
+        "Primary head",
+        "2 classes"
+      ],
+      "shape": "process",
+      "container": false,
+      "contract_nodes": [
+        "bh"
+      ]
+    },
+    "proposed": {
+      "bbox": [
+        58,
+        887,
+        276,
+        1108
+      ],
+      "outline": [
+        [
+          58,
+          887
+        ],
+        [
+          276,
+          887
+        ],
+        [
+          276,
+          1108
+        ],
+        [
+          58,
+          1108
+        ]
+      ],
+      "lines": [
+        "Proposed (C3, C4)"
+      ],
+      "shape": "process",
+      "container": true,
+      "contract_nodes": [
+        "px",
+        "cbam",
+        "ph",
+        "gap",
+        "gmp",
+        "pc",
+        "ah"
+      ]
+    },
+    "pe": {
+      "bbox": [
+        72,
+        932,
+        158,
+        978
+      ],
+      "outline": [
+        [
+          72,
+          932
+        ],
+        [
+          158,
+          932
+        ],
+        [
+          158,
+          978
+        ],
+        [
+          72,
+          978
+        ]
+      ],
+      "lines": [
+        "DenseNet201",
+        "pre-CBAM"
+      ],
+      "shape": "process",
+      "container": false,
+      "contract_nodes": [
+        "px"
+      ]
+    },
+    "cbam": {
+      "bbox": [
+        178,
+        928,
+        260,
+        962
+      ],
+      "outline": [
+        [
+          178,
+          928
+        ],
+        [
+          260,
+          928
+        ],
+        [
+          260,
+          962
+        ],
+        [
+          178,
+          962
+        ]
+      ],
+      "lines": [
+        "CBAM"
+      ],
+      "shape": "process",
+      "container": false,
+      "contract_nodes": [
+        "cbam"
+      ]
+    },
+    "ph": {
+      "bbox": [
+        178,
+        986,
+        260,
+        1036
+      ],
+      "outline": [
+        [
+          178,
+          986
+        ],
+        [
+          260,
+          986
+        ],
+        [
+          260,
+          1036
+        ],
+        [
+          178,
+          1036
+        ]
+      ],
+      "lines": [
+        "Primary head",
+        "2 classes"
+      ],
+      "shape": "process",
+      "container": false,
+      "contract_nodes": [
+        "ph"
+      ]
+    },
+    "pool": {
+      "bbox": [
+        72,
+        998,
+        158,
+        1044
+      ],
+      "outline": [
+        [
+          72,
+          998
+        ],
+        [
+          158,
+          998
+        ],
+        [
+          158,
+          1044
+        ],
+        [
+          72,
+          1044
+        ]
+      ],
+      "lines": [
+        "GAP + GMP",
+        "(concatenate)"
+      ],
+      "shape": "process",
+      "container": false,
+      "contract_nodes": [
+        "gap",
+        "gmp",
+        "pc"
+      ]
+    },
+    "aux": {
+      "bbox": [
+        72,
+        1058,
+        260,
+        1094
+      ],
+      "outline": [
+        [
+          72,
+          1058
+        ],
+        [
+          260,
+          1058
+        ],
+        [
+          260,
+          1094
+        ],
+        [
+          72,
+          1094
+        ]
+      ],
+      "lines": [
+        "Auxiliary head \u00b7 4 classes"
+      ],
+      "shape": "process",
+      "container": false,
+      "contract_nodes": [
+        "ah"
+      ]
+    },
+    "fit": {
+      "bbox": [
+        340,
+        628,
+        458,
+        698
+      ],
+      "outline": [
+        [
+          340,
+          628
+        ],
+        [
+          458,
+          628
+        ],
+        [
+          458,
+          698
+        ],
+        [
+          340,
+          698
+        ]
+      ],
+      "lines": [
+        "Train model",
+        "Select by",
+        "validation"
+      ],
+      "shape": "process",
+      "container": false,
+      "contract_nodes": [
+        "cw",
+        "loss",
+        "adam",
+        "state",
+        "validation",
+        "callbacks"
+      ]
+    },
+    "selected": {
+      "bbox": [
+        340,
+        728,
+        458,
+        790
+      ],
+      "outline": [
+        [
+          340,
+          728
+        ],
+        [
+          448,
+          728
+        ],
+        [
+          458,
+          738
+        ],
+        [
+          458,
+          790
+        ],
+        [
+          340,
+          790
+        ]
+      ],
+      "lines": [
+        "Best model",
+        "Restored weights",
+        "Saved checkpoint"
+      ],
+      "shape": "document",
+      "container": false,
+      "contract_nodes": [
+        "selected",
+        "saved"
+      ]
+    },
+    "testdata": {
+      "bbox": [
+        540,
+        580,
+        760,
+        630
+      ],
+      "outline": [
+        [
+          548,
+          580
+        ],
+        [
+          760,
+          580
+        ],
+        [
+          752,
+          630
+        ],
+        [
+          540,
+          630
+        ]
+      ],
+      "lines": [
+        "Test images and labels"
+      ],
+      "shape": "data",
+      "container": false,
+      "contract_nodes": [
+        "pe"
+      ]
+    },
+    "predict": {
+      "bbox": [
+        540,
+        680,
+        650,
+        740
+      ],
+      "outline": [
+        [
+          540,
+          680
+        ],
+        [
+          650,
+          680
+        ],
+        [
+          650,
+          740
+        ],
+        [
+          540,
+          740
+        ]
+      ],
+      "lines": [
+        "Test prediction",
+        "Auxiliary:",
+        "proposed only"
+      ],
+      "shape": "process",
+      "container": false,
+      "contract_nodes": [
+        "infer",
+        "pred",
+        "timer"
+      ]
+    },
+    "evaluate": {
+      "bbox": [
+        540,
+        790,
+        650,
+        850
+      ],
+      "outline": [
+        [
+          540,
+          790
+        ],
+        [
+          650,
+          790
+        ],
+        [
+          650,
+          850
+        ],
+        [
+          540,
+          850
+        ]
+      ],
+      "lines": [
+        "Metrics",
+        "Calibration",
+        "Auxiliary & timing"
+      ],
+      "shape": "process",
+      "container": false,
+      "contract_nodes": [
+        "metrics",
+        "eff",
+        "agg",
+        "pooled",
+        "primary",
+        "supp"
+      ]
+    },
+    "sample": {
+      "bbox": [
+        670,
+        680,
+        760,
+        740
+      ],
+      "outline": [
+        [
+          670,
+          680
+        ],
+        [
+          760,
+          680
+        ],
+        [
+          760,
+          740
+        ],
+        [
+          670,
+          740
+        ]
+      ],
+      "lines": [
+        "Matched image",
+        "Requested",
+        "primary class"
+      ],
+      "shape": "process",
+      "container": false,
+      "contract_nodes": [
+        "sample"
+      ]
+    },
+    "grad": {
+      "bbox": [
+        670,
+        900,
+        760,
+        950
+      ],
+      "outline": [
+        [
+          670,
+          900
+        ],
+        [
+          760,
+          900
+        ],
+        [
+          760,
+          950
+        ],
+        [
+          670,
+          950
+        ]
+      ],
+      "lines": [
+        "Qualitative",
+        "Grad-CAM"
+      ],
+      "shape": "process",
+      "container": false,
+      "contract_nodes": [
+        "gf",
+        "grad",
+        "map",
+        "panels"
+      ]
+    },
+    "results": {
+      "bbox": [
+        660,
+        1000,
+        768,
+        1050
+      ],
+      "outline": [
+        [
+          668,
+          1000
+        ],
+        [
+          768,
+          1000
+        ],
+        [
+          760,
+          1050
+        ],
+        [
+          660,
+          1050
+        ]
+      ],
+      "lines": [
+        "Results",
+        "Metrics, heatmaps"
+      ],
+      "shape": "data",
+      "container": false,
+      "contract_nodes": [
+        "evidence"
+      ]
+    }
+  },
+  "frames": [
+    {
+      "id": "M1",
+      "bbox": [
+        222,
+        92,
+        498,
+        184
+      ],
+      "title": [
+        "1 Data Audit"
+      ],
+      "border_style": "solid",
+      "weight_pt": 1.1,
+      "dash_pattern": [],
+      "gray": 0.2
+    },
+    {
+      "id": "M2",
+      "bbox": [
+        222,
+        204,
+        498,
+        310
+      ],
+      "title": [
+        "2 Five-Fold",
+        "Partitioning"
+      ],
+      "border_style": "solid",
+      "weight_pt": 1.1,
+      "dash_pattern": [],
+      "gray": 0.2
+    },
+    {
+      "id": "M3",
+      "bbox": [
+        18,
+        388,
+        718,
+        498
+      ],
+      "title": [
+        "3 Input Preparation"
+      ],
+      "border_style": "solid",
+      "weight_pt": 1.1,
+      "dash_pattern": [],
+      "gray": 0.2
+    },
+    {
+      "id": "M4",
+      "bbox": [
+        18,
+        516,
+        490,
+        1134
+      ],
+      "title": [
+        "4 Training and Model Selection"
+      ],
+      "border_style": "solid",
+      "weight_pt": 1.1,
+      "dash_pattern": [],
+      "gray": 0.2
+    },
+    {
+      "id": "4A",
+      "bbox": [
+        36,
+        556,
+        298,
+        1116
+      ],
+      "title": [
+        "4A Comparative Models"
+      ],
+      "border_style": "dashed",
+      "weight_pt": 0.8,
+      "dash_pattern": [
+        5,
+        4
+      ],
+      "gray": 0.5
+    },
+    {
+      "id": "4B",
+      "bbox": [
+        326,
+        556,
+        472,
+        1116
+      ],
+      "title": [
+        "4B Training",
+        "and Validation"
+      ],
+      "border_style": "dashed",
+      "weight_pt": 0.8,
+      "dash_pattern": [
+        5,
+        4
+      ],
+      "gray": 0.5
+    },
+    {
+      "id": "M5",
+      "bbox": [
+        518,
+        516,
+        774,
+        1070
+      ],
+      "title": [
+        "5 Evaluation",
+        "and Interpretation"
+      ],
+      "border_style": "solid",
+      "weight_pt": 1.1,
+      "dash_pattern": [],
+      "gray": 0.2
+    }
+  ],
+  "edges": [
+    {
+      "source": "source",
+      "target": "audit",
+      "points": [
+        [
+          360,
+          72
+        ],
+        [
+          360,
+          130
+        ]
+      ],
+      "payload": "SourceRecords",
+      "kind": "data"
+    },
+    {
+      "source": "audit",
+      "target": "manifest",
+      "points": [
+        [
+          360,
+          174
+        ],
+        [
+          360,
+          254
+        ]
+      ],
+      "payload": "RetainedRecords",
+      "kind": "data"
+    },
+    {
+      "source": "manifest",
+      "target": "train",
+      "points": [
+        [
+          360,
+          298
+        ],
+        [
+          360,
+          310
+        ],
+        [
+          365.0,
+          310
+        ],
+        [
+          365.0,
+          324
+        ]
+      ],
+      "payload": "FoldManifest",
+      "kind": "data"
+    },
+    {
+      "source": "manifest",
+      "target": "val",
+      "points": [
+        [
+          360,
+          298
+        ],
+        [
+          360,
+          310
+        ],
+        [
+          517.0,
+          310
+        ],
+        [
+          517.0,
+          324
+        ]
+      ],
+      "payload": "FoldManifest",
+      "kind": "data"
+    },
+    {
+      "source": "manifest",
+      "target": "test",
+      "points": [
+        [
+          360,
+          298
+        ],
+        [
+          360,
+          310
+        ],
+        [
+          652.0,
+          310
+        ],
+        [
+          652.0,
+          324
+        ]
+      ],
+      "payload": "FoldManifest",
+      "kind": "data"
+    },
+    {
+      "source": "train",
+      "target": "pt",
+      "points": [
+        [
+          365.0,
+          368
+        ],
+        [
+          365.0,
+          430
+        ]
+      ],
+      "payload": "TrainRecords",
+      "kind": "data"
+    },
+    {
+      "source": "val",
+      "target": "pv",
+      "points": [
+        [
+          517.0,
+          368
+        ],
+        [
+          517.0,
+          430
+        ]
+      ],
+      "payload": "ValidationRecords",
+      "kind": "data"
+    },
+    {
+      "source": "test",
+      "target": "prep",
+      "points": [
+        [
+          652.0,
+          368
+        ],
+        [
+          652.0,
+          422
+        ]
+      ],
+      "payload": "TestRecords",
+      "kind": "data"
+    },
+    {
+      "source": "pt",
+      "target": "choice",
+      "points": [
+        [
+          300,
+          452
+        ],
+        [
+          288,
+          452
+        ],
+        [
+          288,
+          615
+        ],
+        [
+          249,
+          615
+        ]
+      ],
+      "payload": "CaseSpec",
+      "kind": "control"
+    },
+    {
+      "source": "pt",
+      "target": "fit",
+      "points": [
+        [
+          365,
+          474
+        ],
+        [
+          365,
+          504
+        ],
+        [
+          330,
+          504
+        ],
+        [
+          330,
+          620
+        ],
+        [
+          365,
+          620
+        ],
+        [
+          365,
+          628
+        ]
+      ],
+      "payload": "TrainBatch",
+      "kind": "data"
+    },
+    {
+      "source": "pv",
+      "target": "fit",
+      "points": [
+        [
+          517,
+          474
+        ],
+        [
+          517,
+          500
+        ],
+        [
+          480,
+          500
+        ],
+        [
+          480,
+          620
+        ],
+        [
+          432,
+          620
+        ],
+        [
+          432,
+          628
+        ]
+      ],
+      "payload": "ValidationBatch",
+      "kind": "data"
+    },
+    {
+      "source": "choice",
+      "target": "benchmark",
+      "points": [
+        [
+          167,
+          637
+        ],
+        [
+          167,
+          663
+        ]
+      ],
+      "payload": "BenchmarkChoice",
+      "kind": "control"
+    },
+    {
+      "source": "choice",
+      "target": "proposed",
+      "points": [
+        [
+          85,
+          615
+        ],
+        [
+          46,
+          615
+        ],
+        [
+          46,
+          906
+        ],
+        [
+          58,
+          906
+        ]
+      ],
+      "payload": "ProposedChoice",
+      "kind": "control"
+    },
+    {
+      "source": "be",
+      "target": "ba",
+      "points": [
+        [
+          158,
+          716
+        ],
+        [
+          178,
+          716
+        ]
+      ],
+      "payload": "Pool3Features",
+      "kind": "data"
+    },
+    {
+      "source": "be",
+      "target": "bf",
+      "points": [
+        [
+          115,
+          733
+        ],
+        [
+          115,
+          749
+        ],
+        [
+          168,
+          749
+        ],
+        [
+          168,
+          770
+        ],
+        [
+          178,
+          770
+        ]
+      ],
+      "payload": "LateFeatures",
+      "kind": "data"
+    },
+    {
+      "source": "ba",
+      "target": "bf",
+      "points": [
+        [
+          219,
+          749
+        ],
+        [
+          219,
+          753
+        ]
+      ],
+      "payload": "ProjectedAttention",
+      "kind": "data"
+    },
+    {
+      "source": "bf",
+      "target": "bh",
+      "points": [
+        [
+          219,
+          787
+        ],
+        [
+          219,
+          797
+        ]
+      ],
+      "payload": "BenchmarkFusion",
+      "kind": "data"
+    },
+    {
+      "source": "pe",
+      "target": "cbam",
+      "points": [
+        [
+          158,
+          945
+        ],
+        [
+          168,
+          945
+        ],
+        [
+          178,
+          945
+        ]
+      ],
+      "payload": "PreCBAMFeatures",
+      "kind": "data"
+    },
+    {
+      "source": "pe",
+      "target": "pool",
+      "points": [
+        [
+          115,
+          978
+        ],
+        [
+          115,
+          998
+        ]
+      ],
+      "payload": "PreCBAMFeatures",
+      "kind": "data"
+    },
+    {
+      "source": "cbam",
+      "target": "ph",
+      "points": [
+        [
+          219,
+          962
+        ],
+        [
+          219,
+          986
+        ]
+      ],
+      "payload": "CBAMFeatures",
+      "kind": "data"
+    },
+    {
+      "source": "pool",
+      "target": "aux",
+      "points": [
+        [
+          115,
+          1044
+        ],
+        [
+          115,
+          1058
+        ]
+      ],
+      "payload": "PooledDescriptors",
+      "kind": "data"
+    },
+    {
+      "source": "benchmark",
+      "target": "fit",
+      "points": [
+        [
+          276,
+          770
+        ],
+        [
+          312,
+          770
+        ],
+        [
+          312,
+          651
+        ],
+        [
+          340,
+          651
+        ]
+      ],
+      "payload": "ModelDefinition",
+      "kind": "model_definition"
+    },
+    {
+      "source": "proposed",
+      "target": "fit",
+      "points": [
+        [
+          276,
+          1015
+        ],
+        [
+          320,
+          1015
+        ],
+        [
+          320,
+          678
+        ],
+        [
+          340,
+          678
+        ]
+      ],
+      "payload": "ModelDefinition",
+      "kind": "model_definition"
+    },
+    {
+      "source": "fit",
+      "target": "selected",
+      "points": [
+        [
+          399,
+          698
+        ],
+        [
+          399,
+          728
+        ]
+      ],
+      "payload": "SelectedModelBundle",
+      "kind": "model_state"
+    },
+    {
+      "source": "prep",
+      "target": "testdata",
+      "points": [
+        [
+          652,
+          482
+        ],
+        [
+          652,
+          580
+        ]
+      ],
+      "payload": "TestInputAndReferences",
+      "kind": "data"
+    },
+    {
+      "source": "testdata",
+      "target": "predict",
+      "points": [
+        [
+          565,
+          630
+        ],
+        [
+          565,
+          680
+        ]
+      ],
+      "payload": "TestInput",
+      "kind": "data"
+    },
+    {
+      "source": "testdata",
+      "target": "evaluate",
+      "points": [
+        [
+          654,
+          630
+        ],
+        [
+          654,
+          820
+        ],
+        [
+          650,
+          820
+        ]
+      ],
+      "payload": "TestReferences",
+      "kind": "data"
+    },
+    {
+      "source": "testdata",
+      "target": "sample",
+      "points": [
+        [
+          715,
+          630
+        ],
+        [
+          715,
+          680
+        ]
+      ],
+      "payload": "SelectedTestImageAndClassRequest",
+      "kind": "data"
+    },
+    {
+      "source": "selected",
+      "target": "predict",
+      "points": [
+        [
+          458,
+          774
+        ],
+        [
+          502,
+          774
+        ],
+        [
+          502,
+          703
+        ],
+        [
+          540,
+          703
+        ]
+      ],
+      "payload": "SelectedModelState",
+      "kind": "model_state"
+    },
+    {
+      "source": "selected",
+      "target": "grad",
+      "points": [
+        [
+          399,
+          790
+        ],
+        [
+          399,
+          1140
+        ],
+        [
+          784,
+          1140
+        ],
+        [
+          784,
+          925
+        ],
+        [
+          760,
+          925
+        ]
+      ],
+      "payload": "CheckpointArchive",
+      "kind": "model_state"
+    },
+    {
+      "source": "predict",
+      "target": "evaluate",
+      "points": [
+        [
+          590,
+          740
+        ],
+        [
+          590,
+          790
+        ]
+      ],
+      "payload": "PredictionRecords",
+      "kind": "data"
+    },
+    {
+      "source": "sample",
+      "target": "grad",
+      "points": [
+        [
+          715,
+          740
+        ],
+        [
+          715,
+          900
+        ]
+      ],
+      "payload": "SelectedTestImageAndClassRequest",
+      "kind": "data"
+    },
+    {
+      "source": "evaluate",
+      "target": "results",
+      "points": [
+        [
+          540,
+          835
+        ],
+        [
+          530,
+          835
+        ],
+        [
+          530,
+          1025
+        ],
+        [
+          664,
+          1025
+        ]
+      ],
+      "payload": "AggregateAnalysis",
+      "kind": "data"
+    },
+    {
+      "source": "grad",
+      "target": "results",
+      "points": [
+        [
+          715,
+          950
+        ],
+        [
+          715,
+          1000
+        ]
+      ],
+      "payload": "QualitativePanels",
+      "kind": "data"
+    }
+  ],
+  "labels": [
+    {
+      "text": "TMJ image files",
+      "bbox": [
+        321.491943359375,
+        31.35546875,
+        398.508056640625,
+        43.64453125
+      ],
+      "owner": "source",
+      "size": 11
+    },
+    {
+      "text": "3,425 files",
+      "bbox": [
+        334.927734375,
+        46.35546875,
+        385.072265625,
+        58.64453125
+      ],
+      "owner": "source",
+      "size": 11
+    },
+    {
+      "text": "1 Data Audit",
+      "bbox": [
+        232,
+        100.13671875,
+        302.0078125,
+        113.54296875
+      ],
+      "owner": "M1",
+      "size": 12
+    },
+    {
+      "text": "Deduplicate & exclude conflicts",
+      "bbox": [
+        283.87548828125,
+        138.35546875,
+        436.12451171875,
+        150.64453125
+      ],
+      "owner": "audit",
+      "size": 11
+    },
+    {
+      "text": "3,002 retained images",
+      "bbox": [
+        305.57470703125,
+        153.35546875,
+        414.42529296875,
+        165.64453125
+      ],
+      "owner": "audit",
+      "size": 11
+    },
+    {
+      "text": "2 Five-Fold",
+      "bbox": [
+        232,
+        212.13671875,
+        295.33984375,
+        225.54296875
+      ],
+      "owner": "M2",
+      "size": 12
+    },
+    {
+      "text": "Partitioning",
+      "bbox": [
+        232,
+        228.13671875,
+        298.662109375,
+        241.54296875
+      ],
+      "owner": "M2",
+      "size": 12
+    },
+    {
+      "text": "Five-fold partitions",
+      "bbox": [
+        315.0654296875,
+        262.35546875,
+        404.9345703125,
+        274.64453125
+      ],
+      "owner": "manifest",
+      "size": 11
+    },
+    {
+      "text": "Seed 42 \u00b7 same split across cases",
+      "bbox": [
+        276.240478515625,
+        277.35546875,
+        443.759521484375,
+        289.64453125
+      ],
+      "owner": "manifest",
+      "size": 11
+    },
+    {
+      "text": "Training set",
+      "bbox": [
+        336.2646484375,
+        332.35546875,
+        393.7353515625,
+        344.64453125
+      ],
+      "owner": "train",
+      "size": 11
+    },
+    {
+      "text": "2,058",
+      "bbox": [
+        351.236572265625,
+        347.35546875,
+        378.763427734375,
+        359.64453125
+      ],
+      "owner": "train",
+      "size": 11
+    },
+    {
+      "text": "Validation set",
+      "bbox": [
+        483.978515625,
+        332.35546875,
+        550.021484375,
+        344.64453125
+      ],
+      "owner": "val",
+      "size": 11
+    },
+    {
+      "text": "343\u2013344",
+      "bbox": [
+        495.588134765625,
+        347.35546875,
+        538.411865234375,
+        359.64453125
+      ],
+      "owner": "val",
+      "size": 11
+    },
+    {
+      "text": "Test set",
+      "bbox": [
+        632.4384765625,
+        332.35546875,
+        671.5615234375,
+        344.64453125
+      ],
+      "owner": "test",
+      "size": 11
+    },
+    {
+      "text": "600\u2013601",
+      "bbox": [
+        630.588134765625,
+        347.35546875,
+        673.411865234375,
+        359.64453125
+      ],
+      "owner": "test",
+      "size": 11
+    },
+    {
+      "text": "3 Input Preparation",
+      "bbox": [
+        28,
+        396.13671875,
+        137.34765625,
+        409.54296875
+      ],
+      "owner": "M3",
+      "size": 12
+    },
+    {
+      "text": "Scenario: clean or mixed",
+      "bbox": [
+        30,
+        431.0419921875,
+        151.05908203125,
+        443.3310546875
+      ],
+      "owner": "M3",
+      "size": 11
+    },
+    {
+      "text": "Model: benchmark or proposed",
+      "bbox": [
+        30,
+        449.0419921875,
+        182.2490234375,
+        461.3310546875
+      ],
+      "owner": "M3",
+      "size": 11
+    },
+    {
+      "text": "224\u00d7224 RGB \u00b7 [-1,1]",
+      "bbox": [
+        312.5673828125,
+        438.35546875,
+        417.4326171875,
+        450.64453125
+      ],
+      "owner": "pt",
+      "size": 11
+    },
+    {
+      "text": "Training-only flip",
+      "bbox": [
+        324.649658203125,
+        453.35546875,
+        405.350341796875,
+        465.64453125
+      ],
+      "owner": "pt",
+      "size": 11
+    },
+    {
+      "text": "224\u00d7224 RGB \u00b7 [-1,1]",
+      "bbox": [
+        464.5673828125,
+        438.35546875,
+        569.4326171875,
+        450.64453125
+      ],
+      "owner": "pv",
+      "size": 11
+    },
+    {
+      "text": "Deterministic",
+      "bbox": [
+        485.216552734375,
+        453.35546875,
+        548.783447265625,
+        465.64453125
+      ],
+      "owner": "pv",
+      "size": 11
+    },
+    {
+      "text": "224\u00d7224 RGB",
+      "bbox": [
+        616.988525390625,
+        430.85546875,
+        687.011474609375,
+        443.14453125
+      ],
+      "owner": "prep",
+      "size": 11
+    },
+    {
+      "text": "Scale [-1,1]",
+      "bbox": [
+        624.180419921875,
+        445.85546875,
+        679.819580078125,
+        458.14453125
+      ],
+      "owner": "prep",
+      "size": 11
+    },
+    {
+      "text": "Deterministic",
+      "bbox": [
+        620.216552734375,
+        460.85546875,
+        683.783447265625,
+        473.14453125
+      ],
+      "owner": "prep",
+      "size": 11
+    },
+    {
+      "text": "4 Training and Model Selection",
+      "bbox": [
+        28,
+        524.13671875,
+        204.689453125,
+        537.54296875
+      ],
+      "owner": "M4",
+      "size": 12
+    },
+    {
+      "text": "4A Comparative Models",
+      "bbox": [
+        46,
+        564.13671875,
+        182.037109375,
+        577.54296875
+      ],
+      "owner": "4A",
+      "size": 12
+    },
+    {
+      "text": "4B Training",
+      "bbox": [
+        336,
+        564.13671875,
+        402.005859375,
+        577.54296875
+      ],
+      "owner": "4B",
+      "size": 12
+    },
+    {
+      "text": "and Validation",
+      "bbox": [
+        336,
+        580.13671875,
+        418.0078125,
+        593.54296875
+      ],
+      "owner": "4B",
+      "size": 12
+    },
+    {
+      "text": "Model family?",
+      "bbox": [
+        133.07080078125,
+        608.85546875,
+        200.92919921875,
+        621.14453125
+      ],
+      "owner": "choice",
+      "size": 11
+    },
+    {
+      "text": "Benchmark (C1, C2)",
+      "bbox": [
+        68,
+        672.0419921875,
+        172.5322265625,
+        684.3310546875
+      ],
+      "owner": "benchmark",
+      "size": 11
+    },
+    {
+      "text": "DenseNet201",
+      "bbox": [
+        81.3662109375,
+        709.85546875,
+        148.6337890625,
+        722.14453125
+      ],
+      "owner": "be",
+      "size": 11
+    },
+    {
+      "text": "Pool3",
+      "bbox": [
+        204.93310546875,
+        697.85546875,
+        233.06689453125,
+        710.14453125
+      ],
+      "owner": "ba",
+      "size": 11
+    },
+    {
+      "text": "attention",
+      "bbox": [
+        197.899658203125,
+        712.85546875,
+        240.100341796875,
+        725.14453125
+      ],
+      "owner": "ba",
+      "size": 11
+    },
+    {
+      "text": "Pool + project",
+      "bbox": [
+        185.2158203125,
+        727.85546875,
+        252.7841796875,
+        740.14453125
+      ],
+      "owner": "ba",
+      "size": 11
+    },
+    {
+      "text": "Fuse features",
+      "bbox": [
+        185.37158203125,
+        763.85546875,
+        252.62841796875,
+        776.14453125
+      ],
+      "owner": "bf",
+      "size": 11
+    },
+    {
+      "text": "Primary head",
+      "bbox": [
+        133.292724609375,
+        805.35546875,
+        198.707275390625,
+        817.64453125
+      ],
+      "owner": "bh",
+      "size": 11
+    },
+    {
+      "text": "2 classes",
+      "bbox": [
+        143.073486328125,
+        820.35546875,
+        188.926513671875,
+        832.64453125
+      ],
+      "owner": "bh",
+      "size": 11
+    },
+    {
+      "text": "Proposed (C3, C4)",
+      "bbox": [
+        68,
+        896.0419921875,
+        163.34765625,
+        908.3310546875
+      ],
+      "owner": "proposed",
+      "size": 11
+    },
+    {
+      "text": "DenseNet201",
+      "bbox": [
+        81.3662109375,
+        941.35546875,
+        148.6337890625,
+        953.64453125
+      ],
+      "owner": "pe",
+      "size": 11
+    },
+    {
+      "text": "pre-CBAM",
+      "bbox": [
+        89.328857421875,
+        956.35546875,
+        140.671142578125,
+        968.64453125
+      ],
+      "owner": "pe",
+      "size": 11
+    },
+    {
+      "text": "CBAM",
+      "bbox": [
+        203.109619140625,
+        938.85546875,
+        234.890380859375,
+        951.14453125
+      ],
+      "owner": "cbam",
+      "size": 11
+    },
+    {
+      "text": "Primary head",
+      "bbox": [
+        186.292724609375,
+        997.35546875,
+        251.707275390625,
+        1009.64453125
+      ],
+      "owner": "ph",
+      "size": 11
+    },
+    {
+      "text": "2 classes",
+      "bbox": [
+        196.073486328125,
+        1012.35546875,
+        241.926513671875,
+        1024.64453125
+      ],
+      "owner": "ph",
+      "size": 11
+    },
+    {
+      "text": "GAP + GMP",
+      "bbox": [
+        84.5888671875,
+        1007.35546875,
+        145.4111328125,
+        1019.64453125
+      ],
+      "owner": "pool",
+      "size": 11
+    },
+    {
+      "text": "(concatenate)",
+      "bbox": [
+        81.368896484375,
+        1022.35546875,
+        148.631103515625,
+        1034.64453125
+      ],
+      "owner": "pool",
+      "size": 11
+    },
+    {
+      "text": "Auxiliary head \u00b7 4 classes",
+      "bbox": [
+        103.638916015625,
+        1069.85546875,
+        228.361083984375,
+        1082.14453125
+      ],
+      "owner": "aux",
+      "size": 11
+    },
+    {
+      "text": "Train model",
+      "bbox": [
+        369.961181640625,
+        641.85546875,
+        428.038818359375,
+        654.14453125
+      ],
+      "owner": "fit",
+      "size": 11
+    },
+    {
+      "text": "Select by",
+      "bbox": [
+        376.376953125,
+        656.85546875,
+        421.623046875,
+        669.14453125
+      ],
+      "owner": "fit",
+      "size": 11
+    },
+    {
+      "text": "validation",
+      "bbox": [
+        375.761962890625,
+        671.85546875,
+        422.238037109375,
+        684.14453125
+      ],
+      "owner": "fit",
+      "size": 11
+    },
+    {
+      "text": "Best model",
+      "bbox": [
+        371.486572265625,
+        737.85546875,
+        426.513427734375,
+        750.14453125
+      ],
+      "owner": "selected",
+      "size": 11
+    },
+    {
+      "text": "Restored weights",
+      "bbox": [
+        356.506591796875,
+        752.85546875,
+        441.493408203125,
+        765.14453125
+      ],
+      "owner": "selected",
+      "size": 11
+    },
+    {
+      "text": "Saved checkpoint",
+      "bbox": [
+        355.582763671875,
+        767.85546875,
+        442.417236328125,
+        780.14453125
+      ],
+      "owner": "selected",
+      "size": 11
+    },
+    {
+      "text": "Train",
+      "bbox": [
+        343,
+        606.0419921875,
+        368.0615234375,
+        618.3310546875
+      ],
+      "owner": "port",
+      "size": 11
+    },
+    {
+      "text": "Validation",
+      "bbox": [
+        400,
+        606.0419921875,
+        448.31298828125,
+        618.3310546875
+      ],
+      "owner": "port",
+      "size": 11
+    },
+    {
+      "text": "Benchmark (C1/C2)",
+      "bbox": [
+        177,
+        644.0419921875,
+        274.1953125,
+        656.3310546875
+      ],
+      "owner": "edge",
+      "size": 11
+    },
+    {
+      "text": "Proposed (C3/C4)",
+      "bbox": [
+        60,
+        868.0419921875,
+        148.64990234375,
+        880.3310546875
+      ],
+      "owner": "edge",
+      "size": 11
+    },
+    {
+      "text": "5 Evaluation",
+      "bbox": [
+        528,
+        524.13671875,
+        598.6875,
+        537.54296875
+      ],
+      "owner": "M5",
+      "size": 12
+    },
+    {
+      "text": "and Interpretation",
+      "bbox": [
+        528,
+        540.13671875,
+        630.005859375,
+        553.54296875
+      ],
+      "owner": "M5",
+      "size": 12
+    },
+    {
+      "text": "Test images and labels",
+      "bbox": [
+        593.4423828125,
+        598.85546875,
+        706.5576171875,
+        611.14453125
+      ],
+      "owner": "testdata",
+      "size": 11
+    },
+    {
+      "text": "Test prediction",
+      "bbox": [
+        558.927734375,
+        688.85546875,
+        631.072265625,
+        701.14453125
+      ],
+      "owner": "predict",
+      "size": 11
+    },
+    {
+      "text": "Auxiliary:",
+      "bbox": [
+        572.6884765625,
+        703.85546875,
+        617.3115234375,
+        716.14453125
+      ],
+      "owner": "predict",
+      "size": 11
+    },
+    {
+      "text": "proposed only",
+      "bbox": [
+        560.44775390625,
+        718.85546875,
+        629.55224609375,
+        731.14453125
+      ],
+      "owner": "predict",
+      "size": 11
+    },
+    {
+      "text": "Metrics",
+      "bbox": [
+        577.278076171875,
+        798.85546875,
+        612.721923828125,
+        811.14453125
+      ],
+      "owner": "evaluate",
+      "size": 11
+    },
+    {
+      "text": "Calibration",
+      "bbox": [
+        568.70849609375,
+        813.85546875,
+        621.29150390625,
+        826.14453125
+      ],
+      "owner": "evaluate",
+      "size": 11
+    },
+    {
+      "text": "Auxiliary & timing",
+      "bbox": [
+        552.82080078125,
+        828.85546875,
+        637.17919921875,
+        841.14453125
+      ],
+      "owner": "evaluate",
+      "size": 11
+    },
+    {
+      "text": "Matched image",
+      "bbox": [
+        677.39697265625,
+        688.85546875,
+        752.60302734375,
+        701.14453125
+      ],
+      "owner": "sample",
+      "size": 11
+    },
+    {
+      "text": "Requested",
+      "bbox": [
+        688.39697265625,
+        703.85546875,
+        741.60302734375,
+        716.14453125
+      ],
+      "owner": "sample",
+      "size": 11
+    },
+    {
+      "text": "primary class",
+      "bbox": [
+        682.60693359375,
+        718.85546875,
+        747.39306640625,
+        731.14453125
+      ],
+      "owner": "sample",
+      "size": 11
+    },
+    {
+      "text": "Qualitative",
+      "bbox": [
+        689.0146484375,
+        911.35546875,
+        740.9853515625,
+        923.64453125
+      ],
+      "owner": "grad",
+      "size": 11
+    },
+    {
+      "text": "Grad-CAM",
+      "bbox": [
+        688.71923828125,
+        926.35546875,
+        741.28076171875,
+        938.64453125
+      ],
+      "owner": "grad",
+      "size": 11
+    },
+    {
+      "text": "Results",
+      "bbox": [
+        695.660400390625,
+        1011.35546875,
+        732.339599609375,
+        1023.64453125
+      ],
+      "owner": "results",
+      "size": 11
+    },
+    {
+      "text": "Metrics, heatmaps",
+      "bbox": [
+        669.068115234375,
+        1026.35546875,
+        758.931884765625,
+        1038.64453125
+      ],
+      "owner": "results",
+      "size": 11
+    },
+    {
+      "text": "Restored model",
+      "bbox": [
+        480,
+        679.0419921875,
+        557.64990234375,
+        691.3310546875
+      ],
+      "owner": "edge",
+      "size": 11
+    },
+    {
+      "text": "Saved checkpoint",
+      "bbox": [
+        525,
+        1118.0419921875,
+        611.83447265625,
+        1130.3310546875
+      ],
+      "owner": "edge",
+      "size": 11
+    },
+    {
+      "text": "Primary (2): Normal / Subluxation.",
+      "bbox": [
+        24,
+        1145.0419921875,
+        189.66064453125,
+        1157.3310546875
+      ],
+      "owner": "legend",
+      "size": 11
+    },
+    {
+      "text": "Auxiliary (4): none / motion blur / Gaussian noise / metal streak.",
+      "bbox": [
+        24,
+        1162.0419921875,
+        333.35888671875,
+        1174.3310546875
+      ],
+      "owner": "legend",
+      "size": 11
+    },
+    {
+      "text": "C1/C3 clean \u00b7 C2/C4 mixed \u00b7 C3 auxiliary: none. Shared seed 42 folds.",
+      "bbox": [
+        24,
+        1179.0419921875,
+        368.84033203125,
+        1191.3310546875
+      ],
+      "owner": "legend",
+      "size": 11
+    },
+    {
+      "text": "Encoded identity is not patient identity; test exposure unresolved; Grad-CAM qualitative.",
+      "bbox": [
+        24,
+        1196.0419921875,
+        452.01171875,
+        1208.3310546875
+      ],
+      "owner": "legend",
+      "size": 11
+    }
+  ],
+  "junctions": [
+    [
+      360,
+      310
+    ],
+    [
+      365,
+      310
+    ],
+    [
+      517,
+      310
+    ]
+  ],
+  "modulecrop_BBOX": {
+    "source_audit_partition": {
+      "bbox_points": [
+        210,
+        10,
+        710,
+        380
+      ],
+      "coordinate_system": "PDF points, top-left origin",
+      "purpose": "Future crop candidate; inspection only, not canonical",
+      "physical_inches": [
+        6.944444444444445,
+        5.138888888888889
+      ]
+    },
+    "case_preparation": {
+      "bbox_points": [
+        18,
+        388,
+        718,
+        498
+      ],
+      "coordinate_system": "PDF points, top-left origin",
+      "purpose": "Future crop candidate; inspection only, not canonical",
+      "physical_inches": [
+        9.722222222222221,
+        1.5277777777777777
+      ]
+    },
+    "model_construction": {
+      "bbox_points": [
+        30,
+        550,
+        326,
+        1116
+      ],
+      "coordinate_system": "PDF points, top-left origin",
+      "purpose": "Future crop candidate; inspection only, not canonical",
+      "physical_inches": [
+        4.111111111111111,
+        7.861111111111111
+      ]
+    },
+    "primary_auxiliary_fork": {
+      "bbox_points": [
+        58,
+        887,
+        276,
+        1108
+      ],
+      "coordinate_system": "PDF points, top-left origin",
+      "purpose": "Future crop candidate; inspection only, not canonical",
+      "physical_inches": [
+        3.0277777777777777,
+        3.0694444444444446
+      ]
+    },
+    "training_selection": {
+      "bbox_points": [
+        326,
+        550,
+        512,
+        1116
+      ],
+      "coordinate_system": "PDF points, top-left origin",
+      "purpose": "Future crop candidate; inspection only, not canonical",
+      "physical_inches": [
+        2.5833333333333335,
+        7.861111111111111
+      ]
+    },
+    "split_evaluation": {
+      "bbox_points": [
+        478,
+        510,
+        792,
+        1144
+      ],
+      "coordinate_system": "PDF points, top-left origin",
+      "purpose": "Future crop candidate; inspection only, not canonical",
+      "physical_inches": [
+        4.361111111111111,
+        8.805555555555555
+      ]
+    },
+    "composite_module4": {
+      "bbox_points": [
+        18,
+        516,
+        490,
+        1134
+      ],
+      "coordinate_system": "PDF points, top-left origin",
+      "purpose": "Future crop candidate; inspection only, not canonical",
+      "physical_inches": [
+        6.555555555555555,
+        8.583333333333334
+      ]
+    }
+  },
+  "semantics": {
+    "FoldManifest": "Shared common manifest bus; record shapes select Train/Validation/Test subsets. Not three intermingled batches.",
+    "CaseSpec": "Preparation metadata output at the left port of train preparation; not a tensor or targets entering model construction. Same case metadata governs all three preparations.",
+    "ModelDefinition": "Conditional choice of architecture/initialization bundle, NOT merged predictions. One selected fitter per case/fold. Internal blueprint arrows describe features, not training-instance execution.",
+    "TrainBatch": "Images, primary/proposed auxiliary targets, training class counts.",
+    "ValidationBatch": "Images and unweighted references; no optimizer updates.",
+    "TestInputAndReferences": "Matching deterministic test images and keyed inherited/generated references; separated at actual consumers.",
+    "SelectedModelBundle": "Two distinct outputs: restored in-memory selected state for historical prediction; saved best.keras checkpoint for subsequent Grad-CAM. Equivalence to archived CSV predictions is not asserted.",
+    "SelectedTestImageAndClassRequest": "Qualitative selector uses matching test image, inherited reference for stable sampling, and requested primary class; gradient computation remains inside Grad-CAM."
+  },
+  "deliberately_omitted": [
+    "Exact layers and feature ops within compressed head, attention/pool/project and fusion nodes; expanded contract and methods retain them.",
+    "Repeated optimizer parameter-update loops, callbacks, dense L2, exact monitor names, patience, batching and RNG parameters are internal to fitting.",
+    "Provenance/audit/history/configuration edges to report are omitted, not claimed absent from implementation. Results sink covers metrics and panels only.",
+    "Separate primary 10-comparison .005 reporting boundary and supplementary 5 raw-p family, sample SD/CI, pooled counts, and full end-to-end warmed timing bracket are retained in supporting module table.",
+    "GAP and GMP concatenate in compressed GAP + GMP node.",
+    "Matching qualitative selection is aggregated with primary-class request; CSV does not generate gradients."
+  ]
+}
