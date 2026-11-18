@@ -26,7 +26,8 @@ scripts/                  Training, analysis and Grad-CAM tools
 scripts/pipeline/         Data, model, training and evaluation code
 tests/                    Unit tests
 base/                     Source study's released code, kept for reference
-docs/                     Documentation and approved architecture figures
+docs/                     Documentation and the paper's architecture figures
+notebooks/                Architecture and Final V2 trainer walkthroughs
 data/, data_5_fold/       Source images and folds (not in Git)
 results/                  Saved results and checkpoints (only checksums are in Git)
 paper/                    Word chapters (not in Git)
@@ -38,7 +39,7 @@ output/                   Supporting paper material (not in Git)
 - [Code walkthrough](docs/CODE_WALKTHROUGH.md): the code to know for the panel, with likely questions
 - [Guide](docs/GUIDE.md): how to run everything and how to restore archived files
 - [Technical notes](docs/TECHNICAL_NOTES.md): data, models, results and limitations
-- [System architecture](docs/SYSTEM_ARCHITECTURE.md): approved diagrams
+- [System architecture](docs/SYSTEM_ARCHITECTURE.md): the architecture figures from Chapter IV
 - [Paper rules](paper/README.md): the Word chapters are the authoritative version of the manuscript
 - [Groupmates' guide](output/groupmates_guide/README.md): plain-language study guide
 

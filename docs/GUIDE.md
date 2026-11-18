@@ -21,8 +21,11 @@ python -m unittest discover -s tests
 | `generate_gradcam.py` | Grad-CAM for one image |
 | `generate_gradcam_appendix.py` | Paired Grad-CAM panels for a stable sample of images |
 | `gradcam_app.py` | Desktop demo: open an image, see the prediction and Grad-CAM from a saved model |
+| `run_degradation_test.py` | Scores saved checkpoints on their test folds under fixed blur, noise and streak levels. Never trains |
 
 Use `--help` on any script for its full options.
+
+The two notebooks in `notebooks/` walk through the system architecture and the Final V2 trainer module by module. Rebuild them from the code with `python notebooks/build_architecture_notebooks.py`.
 
 ## Run a case
 

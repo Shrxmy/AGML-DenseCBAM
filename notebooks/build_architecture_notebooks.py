@@ -76,7 +76,7 @@ TITLE = """
 
 The system has six modules, in the order the code runs them:
 
-![Figure 4.1: system architecture](figures/architecture_six_modules.png)
+![Figure 4.1: system architecture](../docs/figures/architecture.png)
 
  Each section below explains one module in plain words, shows its code, and then runs a small demonstration on the real data.
 
@@ -331,7 +331,7 @@ M4B_TEXT = """
 
 **What it does.** Trains the model built in Module 4 and keeps its best version. Training is a loop: the training images pass through the model again and again while it corrects itself.
 
-![Training loop](figures/training_loop.png)
+![Training loop](../docs/figures/training_loop.png)
 
 In words: the 2,058 training images are cut into 258 batches of 8. For each batch, the model guesses, the guesses are compared with the true labels (the loss), and Adam nudges the weights to lower the loss. After all 258 batches, one epoch is done. The model is then checked on the validation images; if that is its best validation loss so far, it is saved. This repeats until 5 epochs pass without improvement or 50 epochs are done. One `model.fit` call runs this whole loop.
 
