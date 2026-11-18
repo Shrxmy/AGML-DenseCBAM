@@ -40,7 +40,5 @@ output/                   Supporting paper material (not in Git)
 - [Guide](docs/GUIDE.md): how to run everything and how to restore archived files
 - [Technical notes](docs/TECHNICAL_NOTES.md): data, models, results and limitations
 - [System architecture](docs/SYSTEM_ARCHITECTURE.md): the architecture figures from Chapter IV
-- [Paper rules](paper/README.md): the Word chapters are the authoritative version of the manuscript
-- [Groupmates' guide](output/groupmates_guide/README.md): plain-language study guide
 
 Data, papers and models are excluded from Git. Their presence here does not establish permission to reuse or publish them.
