@@ -20,7 +20,7 @@ python -m unittest discover -s tests
 | `generate_learning_curves.py` | Redraws learning curves from saved histories |
 | `generate_gradcam.py` | Grad-CAM for one image |
 | `generate_gradcam_appendix.py` | Paired Grad-CAM panels for a stable sample of images |
-| `run_controlled_development.py` | Validation-only screening runner, which never predicts on test images |
+| `gradcam_app.py` | Desktop demo: open an image, see the prediction and Grad-CAM from a saved model |
 
 Use `--help` on any script for its full options.
 
@@ -43,19 +43,13 @@ python scripts/analyze_chapter4.py --results_root results/new_run
 
 The analyzer's own metadata still uses .05. The manuscript's threshold is .005, so read the p-values against .005.
 
-## Screen a model change
+## V3 and V4 screens
 
-The runner only accepts a new folder under `results/development_controlled/`. Add `--plan-only` to check a command without training.
+The validation-only runner behind these screens was retired after V4 closed. Its results stay in `results/development_controlled/`. Its code, with `--candidate` and its README, is saved at Git tag `v3-v4-screens`:
 
 ```bash
-python -B scripts/run_controlled_development.py \
-  --folds-root data_5_fold --output-dir results/development_controlled/new_screen_fold_1 \
-  --scenario artifact_mix --attention cbam --auxiliary-head on --artifact-loss-weight 0.3 \
-  --image-size 224 --image-height 448 --recipe v3 --candidate artifact_gated --batch-size 6 \
-  --single-fold fold_1 --plan-only
+git show v3-v4-screens:scripts/development/README.md
 ```
-
-See [`scripts/development/README.md`](../scripts/development/README.md) for what the runner guards against.
 
 ## Rules
 

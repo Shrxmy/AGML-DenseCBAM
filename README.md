@@ -24,7 +24,6 @@ V4 tested three changes to the proposed model on validation data only. None met 
 ```text
 scripts/                  Training, analysis and Grad-CAM tools
 scripts/pipeline/         Data, model, training and evaluation code
-scripts/development/      Validation-only screening runner (V3 and V4 screens)
 tests/                    Unit tests
 base/                     Source study's released code, kept for reference
 docs/                     Documentation and approved architecture figures
@@ -36,6 +35,7 @@ output/                   Supporting paper material (not in Git)
 
 ## Documentation
 
+- [Code walkthrough](docs/CODE_WALKTHROUGH.md): the code to know for the panel, with likely questions
 - [Guide](docs/GUIDE.md): how to run everything and how to restore archived files
 - [Technical notes](docs/TECHNICAL_NOTES.md): data, models, results and limitations
 - [System architecture](docs/SYSTEM_ARCHITECTURE.md): approved diagrams
