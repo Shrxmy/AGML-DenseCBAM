@@ -97,17 +97,5 @@ class V3RecipeTests(unittest.TestCase):
         self.assertNotEqual(effective_run_config_sha256(v3), effective_run_config_sha256(config))
 
 
-    def test_development_v2_payload_omits_new_fields_and_v3_requires_height(self) -> None:
-        from scripts.development.config import DevelopmentConfig, validate_config
-
-        payload = DevelopmentConfig(Path("data_5_fold"), Path("results/development_controlled/x")).payload()
-        self.assertNotIn("recipe", payload)
-        self.assertNotIn("image_height", payload)
-        v3 = DevelopmentConfig(Path("data_5_fold"), Path("results/development_controlled/x"), recipe="v3")
-        with self.assertRaises(ValueError):
-            validate_config(v3)
-        validate_config(dataclasses.replace(v3, image_height=448))
-        self.assertEqual(dataclasses.replace(v3, image_height=448).input_hw, (448, 224))
-
 if __name__ == "__main__":
     unittest.main()

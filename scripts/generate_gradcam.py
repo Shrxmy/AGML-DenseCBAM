@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import csv
 import json
 from pathlib import Path
 from typing import Dict, Tuple
@@ -172,61 +171,6 @@ def save_gradcam_panel(
     plt.close(figure)
 
 
-def load_roi(roi_csv: Path, image_path: Path) -> Tuple[float, float, float, float]:
-    matches = []
-    with roi_csv.open(newline="", encoding="utf-8-sig") as handle:
-        reader = csv.DictReader(handle)
-        required = {"sample_id", "x_min", "y_min", "x_max", "y_max"}
-        if not reader.fieldnames or not required.issubset(reader.fieldnames):
-            raise ValueError(f"{roi_csv} must contain columns: {sorted(required)}")
-        for row in reader:
-            sample_id = row["sample_id"].replace("\\", "/")
-            if sample_id in {image_path.name, str(image_path).replace("\\", "/")}:
-                matches.append(row)
-    if len(matches) != 1:
-        raise ValueError(f"Expected one ROI row for {image_path}; found {len(matches)}")
-    row = matches[0]
-    return tuple(float(row[key]) for key in ["x_min", "y_min", "x_max", "y_max"])
-
-
-def roi_metrics(
-    heatmap: np.ndarray,
-    roi: Tuple[float, float, float, float],
-    original_size: Tuple[int, int],
-    analysis_size: Tuple[int, int],
-    threshold: float,
-) -> Dict[str, float]:
-    original_width, original_height = original_size
-    width, height = analysis_size
-    resized_heatmap = cv2.resize(heatmap, (width, height), interpolation=cv2.INTER_LINEAR)
-    x_min, y_min, x_max, y_max = roi
-    coordinates = [
-        int(np.clip(round(x_min / original_width * width), 0, width)),
-        int(np.clip(round(y_min / original_height * height), 0, height)),
-        int(np.clip(round(x_max / original_width * width), 0, width)),
-        int(np.clip(round(y_max / original_height * height), 0, height)),
-    ]
-    sx_min, sy_min, sx_max, sy_max = coordinates
-    if sx_max <= sx_min or sy_max <= sy_min:
-        raise ValueError(f"ROI has no area after scaling: {roi}")
-
-    roi_mask = np.zeros_like(resized_heatmap, dtype=bool)
-    roi_mask[sy_min:sy_max, sx_min:sx_max] = True
-    localization_energy = float(
-        resized_heatmap[roi_mask].sum() / max(resized_heatmap.sum(), 1e-12)
-    )
-
-    attention_mask = resized_heatmap >= threshold
-    intersection = np.logical_and(attention_mask, roi_mask).sum()
-    union = np.logical_or(attention_mask, roi_mask).sum()
-    iou = float(intersection / union) if union else 0.0
-    return {
-        "localization_energy": localization_energy,
-        "gradcam_roi_iou": iou,
-        "heatmap_threshold": threshold,
-    }
-
-
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate Grad-CAM from a leakage-safe final checkpoint.")
     parser.add_argument("--checkpoint", type=Path, required=True)
@@ -243,15 +187,11 @@ def main() -> None:
         default="auto",
         help="Use recorded run_config policy by default; specify only for legacy checkpoints.",
     )
-    parser.add_argument("--roi_csv", type=Path, default=None)
-    parser.add_argument("--heatmap_threshold", type=float, default=0.5)
     parser.add_argument("--output_dir", type=Path, default=Path("results/gradcam"))
     args = parser.parse_args()
 
     if not 0 <= args.alpha <= 1:
         raise ValueError("alpha must be between 0 and 1")
-    if not 0 <= args.heatmap_threshold <= 1:
-        raise ValueError("heatmap_threshold must be between 0 and 1")
 
     tf.keras.utils.set_random_seed(args.seed)
     model, precision_policy = load_checkpoint(args.checkpoint, args.precision_policy)
@@ -290,9 +230,6 @@ def main() -> None:
         title=f"{args.model_type.title()} — {args.scenario}",
     )
 
-    original = cv2.imread(str(args.image))
-    if original is None:
-        raise ValueError(f"Could not read original image: {args.image}")
     predicted_class_index = int(np.argmax(probabilities))
     result: Dict[str, object] = {
         "checkpoint": str(args.checkpoint),
@@ -312,9 +249,7 @@ def main() -> None:
         "heatmap_png": str(heatmap_path),
         "overlay_png": str(overlay_path),
         "panel_png": str(panel_path),
-        "interpretation_scope": (
-            "qualitative only unless independently prepared expert ROI annotations are supplied"
-        ),
+        "interpretation_scope": "qualitative only",
     }
     if args.model_type == "proposed":
         artifact_probabilities = np.asarray(raw_outputs["artifact_output"])[0]
@@ -323,19 +258,6 @@ def main() -> None:
             label: float(probability)
             for label, probability in zip(ARTIFACT_LABELS, artifact_probabilities)
         }
-    if args.roi_csv is not None:
-        roi = load_roi(args.roi_csv, args.image)
-        result["roi_original_pixels"] = roi
-        result.update(
-            roi_metrics(
-                heatmap,
-                roi,
-                original_size=(original.shape[1], original.shape[0]),
-                analysis_size=(args.image_size, args.image_size),
-                threshold=args.heatmap_threshold,
-            )
-        )
-
     result_path = args.output_dir / f"{stem}_metrics.json"
     result_path.write_text(json.dumps(result, indent=2), encoding="utf-8")
     print(json.dumps(result, indent=2))
